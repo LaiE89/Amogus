@@ -35,13 +35,9 @@ public class Server extends Thread{
             connectView.addressErrorLabel.setText(e.getMessage());
         }
         new Thread(this).start();
-        //ServerHeartbeat heartbeat = new ServerHeartbeat(this);
-        //heartbeat.start();
     }
 
     public void run() {
-        //ServerHeartbeat heartbeat = new ServerHeartbeat(this);
-        //heartbeat.start();
         Thread checkClients = new Thread(new Runnable() {
             @Override
             public void run() {

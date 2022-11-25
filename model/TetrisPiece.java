@@ -45,6 +45,7 @@ public class TetrisPiece implements Serializable {
         //your code here!
         this.body = points;
         HashMap<Integer, Integer> lowYVal4XVal = new HashMap<>();
+        // Finding the lowest y coordinate of every x-value in the body
         for (int i = 0; i < this.body.length; i++) {
             if (!lowYVal4XVal.containsKey(this.body[i].x)) {
                 int curX = this.body[i].x;
@@ -59,13 +60,15 @@ public class TetrisPiece implements Serializable {
         }
         this.lowestYVals = lowYVal4XVal.values().stream().mapToInt(Integer::intValue).toArray();
         this.width = lowestYVals.length;
+
+        // Calculating the max height of the body
         int maxHeight = 0;
         for (int i = 0; i < this.body.length; i++) {
-            if (this.body[i].y > maxHeight) {
-                maxHeight = this.body[i].y;
+            if (this.body[i].y + 1 > maxHeight) {
+                maxHeight = this.body[i].y + 1;
             }
         }
-        this.height = maxHeight + 1;
+        this.height = maxHeight;
     }
 
     /**
