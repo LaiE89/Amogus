@@ -129,12 +129,6 @@ public class TetrisBoard implements Serializable{
         return false;
     }
 
-    public boolean getGrid2(int x, int y) {
-        if (x >= width || x < 0 || y >= height + 4 || y < 0 || tetrisGrid[x][y])
-            return true;
-        return false;
-    }
-
     /**
      * Given a piece and an x, returns the y value where the piece will come to rest
      * if it were dropped straight down at that x.
@@ -142,7 +136,8 @@ public class TetrisBoard implements Serializable{
      * Use getLowestYVals and the col heights (getColumnHeight) to compute this quickly!
      *
      * @param piece piece to place
-     * @param x column of grid
+     * @param x column of grid where the piece will be placed
+     * @param y row of grid where the piece will be placed
      *
      * @return the y value where the piece will come to rest
      */
@@ -151,6 +146,8 @@ public class TetrisBoard implements Serializable{
         //throw new UnsupportedOperationException(); //change this!
         int[] pieceLowest = piece.getLowestYVals();
         int[] heightOfCols = new int[pieceLowest.length];
+
+        // Get height of every column the current piece is on. Any blocks above the current piece will be ignored
         for (int i = 0; i < pieceLowest.length; i++) {
             int curSpace = 0;
             for (int j = y-1; j >= 0; j--) {
@@ -165,6 +162,9 @@ public class TetrisBoard implements Serializable{
         HashMap<Integer, ArrayList<Integer>> largestCol = getLargest(heightOfCols);
         int largestColHeight = (int)largestCol.keySet().toArray()[0];
         ArrayList<Integer> largestColIndex = largestCol.get(largestColHeight);
+
+        // Getting the x-position of the current piece with the deepest space for insertion.
+        // These x-positions are only considered if they lie in the same x-position as the tallest column.
         int smallestInsertionLength = pieceLowest[largestColIndex.get(0)];
         for (int i = 0; i < largestColIndex.size(); i++) {
             int insertionLength = pieceLowest[largestColIndex.get(i)];
@@ -175,7 +175,17 @@ public class TetrisBoard implements Serializable{
         return largestColHeight - smallestInsertionLength;
     }
 
+    /**
+     * Gets the largest number in an integer array and returns a hashmap with the
+     * largest number as a key, and the index of every instance of that large number as the
+     * value of the key as an arraylist of integers.
+     *
+     * @param arr array of integers
+     *
+     * @return a hashmap with the largest integer as the key and the indexes as the value
+     */
     private HashMap<Integer, ArrayList<Integer>> getLargest(int[] arr) {
+        // Getting largest integer
         int max = arr[0];
         HashMap<Integer, ArrayList<Integer>> result = new HashMap<>();
         for (int i = 1; i < arr.length; i++) {
@@ -183,6 +193,8 @@ public class TetrisBoard implements Serializable{
                 max = arr[i];
             }
         }
+
+        // Getting indexes of largest integer
         result.put(max, new ArrayList<>());
         for (int i = 0; i < arr.length; i++) {
             if (arr[i] == max) {

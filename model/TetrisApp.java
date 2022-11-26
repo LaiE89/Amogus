@@ -39,9 +39,8 @@ public class TetrisApp extends Application {
     public void start(Stage primaryStage) {
         this.model = new TetrisModel(); // create a model
         this.view = TetrisView.getInstance(model, primaryStage);
-        //this.view = new TetrisView(model, primaryStage); //tie the model to the view
-        //this.model.startGame(); //begin
 
+        // Check if the user exited the application. On exit, closes any opened server or client connections.
         primaryStage.setOnCloseRequest(new EventHandler<WindowEvent>() {
             @Override
             public void handle(WindowEvent event) {

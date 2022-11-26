@@ -45,6 +45,7 @@ public class TetrisPiece implements Serializable {
         //your code here!
         this.body = points;
         HashMap<Integer, Integer> lowYVal4XVal = new HashMap<>();
+
         // Finding the lowest y coordinate of every x-value in the body
         for (int i = 0; i < this.body.length; i++) {
             if (!lowYVal4XVal.containsKey(this.body[i].x)) {
@@ -134,6 +135,8 @@ public class TetrisPiece implements Serializable {
     public boolean equals(Object obj) {
         // throw new UnsupportedOperationException(); //replace this!
         if (obj instanceof TetrisPiece) {
+
+            // Sorting the tetris points to ensure order does not matter when comparing
             TetrisPiece tp = (TetrisPiece)obj;
             TetrisPoint[] sortedTp = sortTetrisPoints(tp.getBody());
             TetrisPoint[] sortedBody = sortTetrisPoints(this.getBody());
@@ -213,15 +216,20 @@ public class TetrisPiece implements Serializable {
      */
     public static TetrisPiece makeFastRotations(TetrisPiece root) {
         // throw new UnsupportedOperationException(); //replace this!
+        // Initializing the head of the linked list and the next node of the linked list
         TetrisPiece head = root;
         TetrisPiece curRoot = head.computeNextRotation();
         head.next = curRoot;
         TetrisPiece nextRotation = curRoot.computeNextRotation();
+
+        // Continuously creating the next rotation until it reaches a rotation that is equal to its original root
         while (!nextRotation.equals(head)) {
             curRoot.next = nextRotation;
             curRoot = curRoot.next;
             nextRotation = curRoot.computeNextRotation();
         }
+
+        // Setting the next node to the head to ensure it is a circular linked list
         curRoot.next = head;
         return head;
     }
@@ -235,17 +243,23 @@ public class TetrisPiece implements Serializable {
     public TetrisPiece computeNextRotation() {
         // throw new UnsupportedOperationException(); //replace this!
         TetrisPoint[] result = new TetrisPoint[this.body.length];
+
+        // rotating all the points in the body counterclockwise around the origin
         for (int i = 0; i < this.body.length; i++) {
             int rotatedX = (int)Math.round(this.body[i].x * Math.cos(Math.PI/2) - this.body[i].y * Math.sin(Math.PI/2));
             int rotatedY = (int)Math.round(this.body[i].x * Math.sin(Math.PI/2) + this.body[i].y * Math.cos(Math.PI/2));
             result[i] = new TetrisPoint(rotatedX, rotatedY);
         }
+
+        // getting the smallest x-value of every rotated point
         int biggestXDiff = result[0].x;
         for (int i = 0; i < result.length; i++) {
             if (result[i].x < biggestXDiff) {
                 biggestXDiff = result[i].x;
             }
         }
+
+        // translating all the rotated points back to positive x and y-axis
         biggestXDiff = Math.abs(biggestXDiff);
         for (int i = 0; i < result.length; i++) {
             result[i].x += biggestXDiff;
@@ -254,8 +268,18 @@ public class TetrisPiece implements Serializable {
         return newPiece;
     }
 
+    /**
+     * Sorts an array of tetris points by points closest to point (0, 0)
+     * to the point closest to the top-right corner. Returns a new array
+     * of the sorted points
+     *
+     * @param c an array of unsorted TetrisPoints
+     * @return the next rotation of the given piece
+     */
     public TetrisPoint[] sortTetrisPoints(TetrisPoint[] c) {
         TetrisPoint[] pointList = Arrays.copyOf(c, c.length);
+
+        // using insertion sort to sort the tetris points
         for (int j = 1; j < pointList.length; j++) {
             TetrisPoint current = pointList[j];
             int i = j-1;

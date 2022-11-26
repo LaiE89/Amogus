@@ -66,9 +66,13 @@ public class TetrisModel implements Serializable {
         count = 0;
         TetrisApp.view.paintBoard();
 
+        // Check if current game is multiplayer
         if (ConnectView.client != null && ConnectView.client.isGameStarted) {
+            System.out.println("Game is multiplayer.");
             this.isMultiplayer = true;
             this.client = ConnectView.client;
+        }else {
+            this.isMultiplayer = false;
         }
     }
 
@@ -165,8 +169,7 @@ public class TetrisModel implements Serializable {
      */
     public int setCurrent(TetrisPiece piece, int x, int y) {
         int result = board.placePiece(piece, x, y);
-        //System.out.println("Result: " + result + ", Place Location: " + "(" + x + ", " + y + ")");
-        //System.out.println(board);
+
         if (result <= TetrisBoard.ADD_ROW_FILLED) { // SUCCESS
             this.currentPiece = piece;
             this.currentX = x;
@@ -231,9 +234,10 @@ public class TetrisModel implements Serializable {
         if (failed) {
             if (currentPiece != null) board.placePiece(currentPiece, currentX, currentY);
         }
+
+        // If move is drop, instantly place piece and add new piece
         if (verb==MoveType.DROP) {
             TetrisApp.view.timeline.stop();
-            //if (currentPiece != null) board.placePiece(currentPiece, currentX, currentY);
             int cleared = board.clearRows();
             if (cleared > 0) {
                 // scores go up by 5, 10, 20, 40 as more rows are cleared
@@ -254,7 +258,6 @@ public class TetrisModel implements Serializable {
             }
         }else if (failed && verb==MoveType.DOWN) {    // if it's out of bounds due to falling
             TetrisApp.view.timeline.stop();
-            //if (currentPiece != null) board.placePiece(currentPiece, currentX, currentY);
             int cleared = board.clearRows();
             if (cleared > 0) {
                     // scores go up by 5, 10, 20, 40 as more rows are cleared
@@ -288,11 +291,12 @@ public class TetrisModel implements Serializable {
      * pause game
      */
     public void stopGame() {
+        // If the game is a multiplayer game, just exit the game and go to main menu
         if (!isMultiplayer) {
             TetrisApp.view.initUI();
             TetrisApp.view.timer.stop();
             TetrisApp.view.timeline.stop();
-        }else {
+        }else { // If the game is a multiplayer game, tell the server that this player lost
             this.client.sendPacket(this.client.numConnections, true,true);
             this.isMultiplayer = false;
         }

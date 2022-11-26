@@ -38,7 +38,6 @@ public class TetrisView {
     Stage stage;
 
     Button singleplayerButton, chatButton, multiplayerButton; //buttons for functions
-    Label gameModeLabel = new Label("");
 
     public BorderPane borderPane;
     Canvas canvas;
@@ -53,8 +52,6 @@ public class TetrisView {
     private double height;
     private static TetrisView instance;
 
-    //private static TetrisView instance;
-
     /**
      * Constructor
      *
@@ -68,6 +65,12 @@ public class TetrisView {
         initUI();
     }
 
+    /**
+     * Singleton Pattern. Ensures there is only 1 instance of this class.
+     *
+     * @param model reference to tetris model
+     * @param stage application stage
+     */
     public static synchronized TetrisView getInstance(TetrisModel model, Stage stage) {
         if (instance == null) {
             instance = new TetrisView(model, stage);
@@ -88,13 +91,13 @@ public class TetrisView {
 
         //add buttons
         singleplayerButton = new Button("Singleplayer");
-        singleplayerButton.setId("Start");
+        singleplayerButton.setId("Singleplayer");
         singleplayerButton.setPrefSize(150, 50);
         singleplayerButton.setFont(new Font(12));
         singleplayerButton.setStyle("-fx-background-color: #17871b; -fx-text-fill: white;");
 
         multiplayerButton = new Button("Multiplayer");
-        multiplayerButton.setId("New");
+        multiplayerButton.setId("Multiplayer");
         multiplayerButton.setPrefSize(150, 50);
         multiplayerButton.setFont(new Font(12));
         multiplayerButton.setStyle("-fx-background-color: #17871b; -fx-text-fill: white;");
@@ -140,15 +143,8 @@ public class TetrisView {
         gc = canvas.getGraphicsContext2D();
 
         //labels
-        gameModeLabel.setId("GameModeLabel");
-
-        gameModeLabel.setText("Player is: Human");
-        gameModeLabel.setMinWidth(250);
-        gameModeLabel.setFont(new Font(20));
-        gameModeLabel.setStyle("-fx-text-fill: #e8e6e3");
-
         chatButton = new Button("Chat");
-        chatButton.setId("Save");
+        chatButton.setId("Chat");
         chatButton.setPrefSize(150, 50);
         chatButton.setFont(new Font(12));
         chatButton.setStyle("-fx-background-color: #17871b; -fx-text-fill: white;");
@@ -163,6 +159,7 @@ public class TetrisView {
             this.borderPane.requestFocus();
         });
 
+        // Creating variables for checking which buttons are pressed
         BooleanProperty rotatePressed = new SimpleBooleanProperty();
         BooleanProperty rightPressed = new SimpleBooleanProperty();
         BooleanProperty leftPressed = new SimpleBooleanProperty();
@@ -201,7 +198,6 @@ public class TetrisView {
                         paintBoard();
                         rotatePressed.set(false);
                     }
-                    //if (downPressed.get() && (timeline == null || timeline.getStatus() == Animation.Status.STOPPED)) {
                     if (downPressed.get()) {
                         if (timeline.getStatus() != Animation.Status.RUNNING) {
                             timeline = new Timeline(new KeyFrame(Duration.seconds(0.25), e -> {
@@ -213,17 +209,14 @@ public class TetrisView {
                         }else {
                             timeline.setRate(timeline.getCurrentRate() + 0.25f);
                         }
-                        //downPressed.set(false);
                     }
                     if (rightPressed.get()) {
                         model.modelTick(TetrisModel.MoveType.LEFT);
                         paintBoard();
-                        //rightPressed.set(false);
                     }
                     if (leftPressed.get()) {
                         model.modelTick(TetrisModel.MoveType.RIGHT);
                         paintBoard();
-                        //leftPressed.set(false);
                     }
                     lastUpdate = now;
                 }
@@ -318,14 +311,14 @@ public class TetrisView {
     }
 
     /**
-     * Create the view to save a board to a file
+     * Create the view to chat with players in the lobby
      */
     private void createChatView(){
-        // ConnectView saveView = new ConnectView(this);
+        // TODO: Change LoadView class into a UI for chatting
     }
 
     /**
-     * Create the view to select a board to load
+     * Create the view to connect to a game lobby or start a game lobby
      */
     private void createConnectView(){
         connectView = new ConnectView(this, model);

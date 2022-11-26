@@ -1,14 +1,6 @@
 package views;
 
 import javafx.application.Platform;
-import javafx.beans.binding.BooleanBinding;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.IntegerProperty;
-import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleIntegerProperty;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
-import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
@@ -18,22 +10,17 @@ import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-import javafx.stage.WindowEvent;
-import model.TetrisApp;
 import model.TetrisModel;
 import multiplayer.Client;
 import multiplayer.Server;
-
 import java.io.*;
 import java.net.Socket;
 import java.net.ServerSocket;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 
 /** 
- * Save File View
- * 
- * Based on the Tetris assignment in the Nifty Assignments Database, authored by Nick Parlante
+ * Connect View
+ *
+ * Allows the user to start a game lobby and connect to a game lobby
  */
 public class ConnectView {
 
@@ -68,16 +55,16 @@ public class ConnectView {
         dialogVbox.setPadding(new Insets(20, 20, 20, 20));
         dialogVbox.setStyle("-fx-background-color: #121212;");
 
-        addressLabel.setId("SaveBoard"); // DO NOT MODIFY ID
+        addressLabel.setId("Connect"); // DO NOT MODIFY ID
         addressLabel.setStyle("-fx-text-fill: #e8e6e3;");
         addressLabel.setFont(new Font(16));
 
-        addressErrorLabel.setId("SaveFileErrorLabel");
+        addressErrorLabel.setId("AddressErrorLabel");
         addressErrorLabel.setStyle("-fx-text-fill: #e8e6e3;");
         addressErrorLabel.setFont(new Font(16));
         addressErrorLabel.setWrapText(true);
 
-        ipTextField.setId("SaveFileNameTextField");
+        ipTextField.setId("IPTextField");
         ipTextField.setStyle("-fx-text-fill: black;");
         ipTextField.setFont(new Font(16));
         ipTextField.setText("localhost");
@@ -88,7 +75,7 @@ public class ConnectView {
         portTextField.setText("22222");
 
         connectButton = new Button("Connect");
-        connectButton.setId("SaveBoard"); // DO NOT MODIFY ID
+        connectButton.setId("Connect"); // DO NOT MODIFY ID
         connectButton.setStyle("-fx-background-color: #17871b; -fx-text-fill: white;");
         connectButton.setPrefSize(200, 50);
         connectButton.setFont(new Font(16));
@@ -151,17 +138,17 @@ public class ConnectView {
     }
 
     /**
-     * Save the board to a file 
+     * Returns true if there is a server with an ip and port that
+     * matches <ip> and <port>. If so, connects to the server.
+     * Otherwise, returns false.
+     *
+     * @param ip the local IP address of the server
+     * @param port the port that the server is hosted on
+     *
+     * @return true if there is a server with an ip and port that matches the parameters
      */
-
     private boolean connect(String ip, int port) {
         try {
-            /*this.tetrisModel.socket = new Socket(ip, port);
-            this.tetrisModel.dos = new DataOutputStream(this.tetrisModel.socket.getOutputStream());
-            this.tetrisModel.dis = new DataInputStream(this.tetrisModel.socket.getInputStream());
-            this.tetrisModel.accepted = true;
-            this.tetrisModel.isMultiplayer = true;
-            addressErrorLabel.setText("Connected with server with address: " + ip + ":" + port); */
             Socket socket = new Socket(ip, port);
             client = new Client(this.tetrisView, socket);
             new Thread(client).start();
@@ -173,15 +160,25 @@ public class ConnectView {
         return true;
     }
 
+    /**
+     * Starts up a server.
+     */
     private void initializeServer() {
         try {
-            //this.tetrisModel.serverSocket = new ServerSocket(this.port, 8, InetAddress.getByName(this.ip));
             clientHostedServer = new Server(this.tetrisView, this.ip, this.port);
         }catch (Exception e) {
             addressErrorLabel.setText(e.getMessage());
         }
     }
 
+    /**
+     * Checks if port is available.
+     * THIS WAS COPIED FROM THE INTERNET SO REFACTOR IT
+     *
+     * @param port the port to check
+     *
+     * @return true if the port is available.
+     */
     private boolean portAvailable(int port) {
         ServerSocket ss = null;
         try {
@@ -201,6 +198,14 @@ public class ConnectView {
         return false;
     }
 
+    /**
+     * Checks if a string can be cast an integer.
+     * THIS WAS COPIED FROM THE INTERNET SO REFACTOR IT
+     *
+     * @param str the string to check
+     *
+     * @return true if string can be cast as an integer
+     */
     private boolean isInteger(String str) {
         if (str == null) {
             return false;
