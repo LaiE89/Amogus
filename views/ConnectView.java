@@ -14,6 +14,8 @@ import model.TetrisModel;
 import multiplayer.Client;
 import multiplayer.Server;
 import java.io.*;
+import java.net.InetAddress;
+import java.net.NetworkInterface;
 import java.net.Socket;
 import java.net.ServerSocket;
 
@@ -33,12 +35,10 @@ public class ConnectView {
     public Stage dialog = new Stage();
     TetrisView tetrisView;
     TetrisModel tetrisModel;
-
     private String ip;
     private int port;
     public static Client client;
     public static Server clientHostedServer;
-
 
      /**
          * Constructor
@@ -154,7 +154,6 @@ public class ConnectView {
             new Thread(client).start();
             connectButton.setVisible(false);
         }catch (IOException e) {
-            addressErrorLabel.setText("Unable to connect to address: " + ip + ":" + port + " | Starting a server");
             return false;
         }
         return true;
@@ -165,7 +164,16 @@ public class ConnectView {
      */
     private void initializeServer() {
         try {
-            clientHostedServer = new Server(this.tetrisView, this.ip, this.port);
+            String hostIp = InetAddress.getLocalHost().getHostAddress();
+            addressErrorLabel.setText("Unable to connect to address: " + ip + ": " + port + " | Starting a server with address: " + hostIp + ": " + port);
+            ipTextField.setText(hostIp);
+            clientHostedServer = new Server(this.tetrisView, hostIp, this.port);
+
+            // Automatically connect this client to the server
+            Socket socket = new Socket(hostIp, port);
+            client = new Client(this.tetrisView, socket);
+            new Thread(client).start();
+            connectButton.setVisible(false);
         }catch (Exception e) {
             addressErrorLabel.setText(e.getMessage());
         }
