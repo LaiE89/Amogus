@@ -28,7 +28,7 @@ public class TetrisModel implements Serializable {
 
     public int currentX;
     protected int newX;
-    protected int currentY;
+    public int currentY;
     protected int newY;
     public int floorY; // y-value that the piece will fall to
 
@@ -238,27 +238,7 @@ public class TetrisModel implements Serializable {
         }
 
         // If move is drop, instantly place piece and add new piece
-        if (verb==MoveType.DROP) {
-            TetrisApp.view.timeline.stop();
-            int cleared = board.clearRows();
-            if (cleared > 0) {
-                // scores go up by 5, 10, 20, 40 as more rows are cleared
-                switch (cleared) {
-                    case 2:
-                        break;
-                    case 3:
-                        break;
-                    case 4:
-                        break;
-                    default:
-                }
-            }
-            if (board.getMaxHeight() > board.getHeight() - BUFFERZONE) {
-                stopGame();
-            }else {
-                addNewPiece();
-            }
-        }else if (failed && verb==MoveType.DOWN) {    // if it's out of bounds due to falling
+        if (failed && verb==MoveType.DOWN || verb==MoveType.DROP) {    // if it's out of bounds due to falling
             TetrisApp.view.timeline.stop();
             int cleared = board.clearRows();
             if (cleared > 0) {

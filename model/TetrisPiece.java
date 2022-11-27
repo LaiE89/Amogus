@@ -2,6 +2,7 @@ package model;
 
 import java.io.Serializable;
 import java.util.*;
+import javafx.scene.paint.Color;
 
 /** An immutable representation of a tetris piece in a particular rotation.
  *  Each piece is defined by the blocks that make up its body.
@@ -22,6 +23,7 @@ public class TetrisPiece implements Serializable {
     private int width;
     private int height;
     private TetrisPiece next; // We'll use this to link each piece to its "next" rotation.
+    private Color color;
     static private TetrisPiece[] pieces;	// array of rotations for this piece
 
 
@@ -70,6 +72,8 @@ public class TetrisPiece implements Serializable {
             }
         }
         this.height = maxHeight;
+
+        if (this.color == null) this.color = Color.WHITE;
     }
 
     /**
@@ -78,6 +82,36 @@ public class TetrisPiece implements Serializable {
      */
     public TetrisPiece(String points) {
         this(parsePoints(points));
+        switch (points) {
+            case STICK_STR:
+                this.color = Color.CYAN;
+                this.color = this.color.brighter();
+                break;
+            case L1_STR:
+                this.color = Color.DODGERBLUE;
+                this.color = this.color.brighter();
+                break;
+            case L2_STR:
+                this.color = Color.ORANGE;
+                this.color = this.color.brighter();
+                break;
+            case S1_STR:
+                this.color = Color.GREEN;
+                this.color = this.color.brighter();
+                break;
+            case S2_STR:
+                this.color = Color.RED;
+                this.color = this.color.brighter();
+                break;
+            case SQUARE_STR:
+                this.color = Color.YELLOW;
+                this.color = this.color.brighter();
+                break;
+            case PYRAMID_STR:
+                this.color = Color.PURPLE;
+                this.color = this.color.brighter();
+                break;
+        }
     }
 
     /**
@@ -107,6 +141,13 @@ public class TetrisPiece implements Serializable {
     public TetrisPoint[] getBody() {
         return body;
     }
+    public Color getColor() {
+        return color;
+    }
+    public void setColor(Color newColor) {
+        this.color = newColor;
+    }
+
 
     /**
      * Returns a pointer to the piece's lowest Y values. For each x value
@@ -219,14 +260,18 @@ public class TetrisPiece implements Serializable {
         // Initializing the head of the linked list and the next node of the linked list
         TetrisPiece head = root;
         TetrisPiece curRoot = head.computeNextRotation();
+        curRoot.setColor(root.getColor());
+
         head.next = curRoot;
         TetrisPiece nextRotation = curRoot.computeNextRotation();
+        nextRotation.setColor(root.getColor());
 
         // Continuously creating the next rotation until it reaches a rotation that is equal to its original root
         while (!nextRotation.equals(head)) {
             curRoot.next = nextRotation;
             curRoot = curRoot.next;
             nextRotation = curRoot.computeNextRotation();
+            nextRotation.setColor(root.getColor());
         }
 
         // Setting the next node to the head to ensure it is a circular linked list

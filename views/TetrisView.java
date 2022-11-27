@@ -5,6 +5,7 @@ import javafx.animation.AnimationTimer;
 import javafx.beans.binding.BooleanBinding;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
+import javafx.scene.shape.Rectangle;
 import model.TetrisModel;
 
 import javafx.animation.KeyFrame;
@@ -27,6 +28,8 @@ import javafx.stage.Stage;
 import javafx.util.Duration;
 import model.TetrisPoint;
 
+import java.util.ArrayList;
+
 
 /**
  * Tetris View
@@ -43,7 +46,6 @@ public class TetrisView {
     public BorderPane borderPane;
     Canvas canvas;
     GraphicsContext gc; //the graphics context will be linked to the canvas
-
     public ConnectView connectView;
     public AnimationTimer timer;
     private long lastUpdate = 0;
@@ -165,6 +167,7 @@ public class TetrisView {
         BooleanProperty rightPressed = new SimpleBooleanProperty();
         BooleanProperty leftPressed = new SimpleBooleanProperty();
         BooleanProperty downPressed = new SimpleBooleanProperty();
+        BooleanProperty dropPressed = new SimpleBooleanProperty();
         BooleanBinding anyPressed = rotatePressed.or(rightPressed).or(leftPressed).or(downPressed);
 
         borderPane.setOnKeyPressed(new EventHandler<KeyEvent>() {
@@ -184,8 +187,11 @@ public class TetrisView {
                     rightPressed.set(true);
                 }
                 if (k.getCode() == KeyCode.W) {
-                    model.modelTick(TetrisModel.MoveType.DROP);
-                    paintBoard();
+                    if (!dropPressed.get()) {
+                        model.modelTick(TetrisModel.MoveType.DROP);
+                        paintBoard();
+                        dropPressed.set(true);
+                    }
                 }
             }
         });
@@ -193,7 +199,7 @@ public class TetrisView {
         timer = new AnimationTimer() {
             @Override
             public void handle(long now) {
-                if (now - lastUpdate >= 75_000_000) { // Prevent this loop from occurring more than once every 75 milliseconds
+                if (now - lastUpdate >= 80_000_000) { // Prevent this loop from occurring more than once every 80 milliseconds
                     if (rotatePressed.get()) {
                         model.modelTick(TetrisModel.MoveType.ROTATE);
                         paintBoard();
@@ -208,7 +214,7 @@ public class TetrisView {
                             timeline.setCycleCount(Timeline.INDEFINITE);
                             timeline.play();
                         }else {
-                            timeline.setRate(timeline.getCurrentRate() + 0.25f);
+                            timeline.setRate(timeline.getCurrentRate() + 0.25);
                         }
                     }
                     if (rightPressed.get()) {
@@ -236,6 +242,9 @@ public class TetrisView {
                 }
                 if (k.getCode() == KeyCode.D) {
                     rightPressed.set(false);
+                }
+                if (k.getCode() == KeyCode.W) {
+                    dropPressed.set(false);
                 }
             }
         });
@@ -279,14 +288,12 @@ public class TetrisView {
      * Draw the board
      */
     public void paintBoard() {
-
-        // Draw a rectangle around the whole screen
-        gc.setStroke(Color.GREEN);
-        gc.setFill(Color.GREEN);
+        gc.setStroke(Color.BLACK);
+        gc.setFill(Color.BLACK);
         gc.fillRect(0, 0, this.width-1, this.height-1);
 
         // Draw the line separating the top area on the screen
-        gc.setStroke(Color.BLACK);
+        gc.setStroke(Color.GRAY);
         int spacerY = yPixel(this.model.getBoard().getHeight() - this.model.BUFFERZONE - 1);
         gc.strokeLine(0, spacerY, this.width-1, spacerY);
 
@@ -299,9 +306,8 @@ public class TetrisView {
         int floorYHeight = model.floorY;
         TetrisPoint[] currentPieceBody = model.currentPiece.getBody();
         for (int i = 0; i < currentPieceBody.length; i++) {
-            gc.setStroke(Color.BLUE);
+            gc.setStroke(model.currentPiece.getColor());
             gc.strokeRect(xPixel(model.currentX + currentPieceBody[i].x) + 1, yPixel(floorYHeight + currentPieceBody[i].y)+1, dx, dy);
-            gc.setFill(Color.GREEN);
         }
 
         int x, y;
@@ -312,12 +318,52 @@ public class TetrisView {
             final int yHeight = this.model.getBoard().getColumnHeight(x);
             for (y=0; y<yHeight; y++) {
                 if (this.model.getBoard().getGrid(x, y)) {
-                    gc.setFill(Color.RED);
+                    gc.setFill(Color.WHITE);
                     gc.fillRect(left+1, yPixel(y)+1, dx, dy);
-                    gc.setFill(Color.GREEN);
+                    gc.setFill(Color.BLACK);
                 }
             }
         }
+        // Attempt to make blocks multicolored
+        /*
+        // Draw the line separating the top area on the screen
+        gc.setStroke(Color.BLACK);
+        int spacerY = yPixel(this.model.getBoard().getHeight() - this.model.BUFFERZONE - 1);
+        gc.strokeLine(0, spacerY, this.width - 1, spacerY);
+
+        // Factor a few things out to help the optimizer
+        final int dx = Math.round(dX() - 2);
+        final int dy = Math.round(dY() - 2);
+        final int bWidth = this.model.getBoard().getWidth();
+        final int bHeight = this.model.getBoard().getHeight();
+
+        for (int x = 0; x < bWidth; x++) {
+            int left = xPixel(x);
+            for (int y = 0; y < bHeight; y++) {
+                if (!this.model.getBoard().getGrid(x, y)) {
+                    //gc.setStroke(Color.GREEN);
+                    gc.setFill(Color.BLACK);
+                    gc.setStroke(Color.BLACK);
+                    gc.fillRect(left + 1, yPixel(y) + 1, dX(), dY());
+                    gc.strokeRect(left + 1, yPixel(y) + 1, dX(), dY());
+                }else {
+                    gc.setFill(Color.WHITE);
+                    gc.setStroke(model.currentPiece.getColor());
+                    gc.fillRect(left + 1, yPixel(y) + 1, dx, dy);
+                    gc.strokeRect(left + 1, yPixel(y) + 1, dx, dy);
+                }
+            }
+        }
+
+        // The placement indicator. It paints the area that the current piece is going to land
+        int floorYHeight = model.floorY;
+        TetrisPoint[] currentPieceBody = model.currentPiece.getBody();
+        for (int i = 0; i < currentPieceBody.length; i++) {
+            gc.setStroke(model.currentPiece.getColor());
+            gc.strokeRect(xPixel(model.currentX + currentPieceBody[i].x) + 1, yPixel(floorYHeight + currentPieceBody[i].y) + 1, dx, dy);
+            //gc.setFill(model.currentPiece.getColor());
+            //gc.fillRect(xPixel(model.currentX + currentPieceBody[i].x) + 1, yPixel(model.currentY + currentPieceBody[i].y) + 1, dx, dy);
+        }*/
     }
 
     /**
