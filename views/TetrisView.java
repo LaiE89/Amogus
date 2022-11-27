@@ -25,6 +25,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.stage.Stage;
 import javafx.util.Duration;
+import model.TetrisPoint;
 
 
 /**
@@ -211,11 +212,11 @@ public class TetrisView {
                         }
                     }
                     if (rightPressed.get()) {
-                        model.modelTick(TetrisModel.MoveType.LEFT);
+                        model.modelTick(TetrisModel.MoveType.RIGHT);
                         paintBoard();
                     }
                     if (leftPressed.get()) {
-                        model.modelTick(TetrisModel.MoveType.RIGHT);
+                        model.modelTick(TetrisModel.MoveType.LEFT);
                         paintBoard();
                     }
                     lastUpdate = now;
@@ -264,7 +265,7 @@ public class TetrisView {
         return (int) Math.round(this.height -1 - (y+1)*dY());
     }
     private final int xPixel(int x) {
-        return (int) Math.round(this.width -1 - (x+1)*dX());
+        return (int) Math.round((x)*dX());
     }
     private final float dX() {
         return( ((float)(this.width-2)) / this.model.getBoard().getWidth() );
@@ -293,6 +294,15 @@ public class TetrisView {
         final int dx = Math.round(dX()-2);
         final int dy = Math.round(dY()-2);
         final int bWidth = this.model.getBoard().getWidth();
+
+        // Painting the area that the current piece is going to land
+        int floorYHeight = model.floorY;
+        TetrisPoint[] currentPieceBody = model.currentPiece.getBody();
+        for (int i = 0; i < currentPieceBody.length; i++) {
+            gc.setStroke(Color.BLUE);
+            gc.strokeRect(xPixel(model.currentX + currentPieceBody[i].x) + 1, yPixel(floorYHeight + currentPieceBody[i].y)+1, dx, dy);
+            gc.setFill(Color.GREEN);
+        }
 
         int x, y;
         // Loop through and draw all the blocks; sizes of blocks are calibrated relative to screen size

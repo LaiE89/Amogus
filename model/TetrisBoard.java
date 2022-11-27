@@ -159,6 +159,7 @@ public class TetrisBoard implements Serializable{
             }
             heightOfCols[i] = y - curSpace;
         }
+
         HashMap<Integer, ArrayList<Integer>> largestCol = getLargest(heightOfCols);
         int largestColHeight = (int)largestCol.keySet().toArray()[0];
         ArrayList<Integer> largestColIndex = largestCol.get(largestColHeight);
@@ -172,7 +173,22 @@ public class TetrisBoard implements Serializable{
                 smallestInsertionLength = insertionLength;
             }
         }
-        return largestColHeight - smallestInsertionLength;
+        int potentialDiff = largestColHeight - smallestInsertionLength;
+
+        // Adding extra height if the difference between the largest insertion length
+        // and any other insertion length is greater than the difference between the
+        // tallest column and any other column.
+        int extraDiff = 0;
+        for (int i = 0; i < heightOfCols.length; i++) {
+            if (pieceLowest[i] < smallestInsertionLength) {
+                int diffPieceLowest = smallestInsertionLength - pieceLowest[i];
+                int diffHeights = largestColHeight - heightOfCols[i];
+                if (diffPieceLowest > diffHeights && diffPieceLowest - diffHeights > extraDiff) {
+                    extraDiff = diffPieceLowest - diffHeights;
+                }
+            }
+        }
+        return potentialDiff + extraDiff;
     }
 
     /**

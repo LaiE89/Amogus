@@ -21,13 +21,16 @@ public class TetrisModel implements Serializable {
 
     protected TetrisBoard board;  // Board data structure
     protected TetrisPiece[] pieces; // Pieces to be places on the board
-    protected TetrisPiece currentPiece; //Piece we are currently placing
+    public TetrisPiece currentPiece; //Piece we are currently placing
     protected TetrisPiece newPiece; //next piece to be placed
     protected int count;		 // how many pieces played so far
     protected int score; //the player's score
 
-    protected int currentX, newX;
-    protected int currentY, newY;
+    public int currentX;
+    protected int newX;
+    protected int currentY;
+    protected int newY;
+    public int floorY; // y-value that the piece will fall to
 
     // State of the game
     public boolean gameOn;	// true if we are playing
@@ -112,7 +115,7 @@ public class TetrisModel implements Serializable {
                 newY--;
                 break;
             case DROP: //drop
-                newY = board.placementHeight(newPiece, newX, currentY);
+                newY = board.placementHeight(newPiece, newX, newY);
                 if (newY > currentY) { //piece can't move up!
                     newY = currentY;
                 }
@@ -121,7 +124,6 @@ public class TetrisModel implements Serializable {
             default: //doh!
                 throw new RuntimeException("Bad movement!");
         }
-
     }
 
     /**
@@ -177,7 +179,7 @@ public class TetrisModel implements Serializable {
         } else {
             board.undo();
         }
-
+        this.floorY = board.placementHeight(this.currentPiece, this.currentX, this.currentY);
         return(result);
     }
 
