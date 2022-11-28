@@ -318,52 +318,12 @@ public class TetrisView {
             final int yHeight = this.model.getBoard().getColumnHeight(x);
             for (y=0; y<yHeight; y++) {
                 if (this.model.getBoard().getGrid(x, y)) {
-                    gc.setFill(Color.WHITE);
+                    gc.setFill(this.model.getBoard().getGridColor(x, y));
                     gc.fillRect(left+1, yPixel(y)+1, dx, dy);
                     gc.setFill(Color.BLACK);
                 }
             }
         }
-        // Attempt to make blocks multicolored
-        /*
-        // Draw the line separating the top area on the screen
-        gc.setStroke(Color.BLACK);
-        int spacerY = yPixel(this.model.getBoard().getHeight() - this.model.BUFFERZONE - 1);
-        gc.strokeLine(0, spacerY, this.width - 1, spacerY);
-
-        // Factor a few things out to help the optimizer
-        final int dx = Math.round(dX() - 2);
-        final int dy = Math.round(dY() - 2);
-        final int bWidth = this.model.getBoard().getWidth();
-        final int bHeight = this.model.getBoard().getHeight();
-
-        for (int x = 0; x < bWidth; x++) {
-            int left = xPixel(x);
-            for (int y = 0; y < bHeight; y++) {
-                if (!this.model.getBoard().getGrid(x, y)) {
-                    //gc.setStroke(Color.GREEN);
-                    gc.setFill(Color.BLACK);
-                    gc.setStroke(Color.BLACK);
-                    gc.fillRect(left + 1, yPixel(y) + 1, dX(), dY());
-                    gc.strokeRect(left + 1, yPixel(y) + 1, dX(), dY());
-                }else {
-                    gc.setFill(Color.WHITE);
-                    gc.setStroke(model.currentPiece.getColor());
-                    gc.fillRect(left + 1, yPixel(y) + 1, dx, dy);
-                    gc.strokeRect(left + 1, yPixel(y) + 1, dx, dy);
-                }
-            }
-        }
-
-        // The placement indicator. It paints the area that the current piece is going to land
-        int floorYHeight = model.floorY;
-        TetrisPoint[] currentPieceBody = model.currentPiece.getBody();
-        for (int i = 0; i < currentPieceBody.length; i++) {
-            gc.setStroke(model.currentPiece.getColor());
-            gc.strokeRect(xPixel(model.currentX + currentPieceBody[i].x) + 1, yPixel(floorYHeight + currentPieceBody[i].y) + 1, dx, dy);
-            //gc.setFill(model.currentPiece.getColor());
-            //gc.fillRect(xPixel(model.currentX + currentPieceBody[i].x) + 1, yPixel(model.currentY + currentPieceBody[i].y) + 1, dx, dy);
-        }*/
     }
 
     /**

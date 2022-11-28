@@ -24,6 +24,7 @@ public class TetrisPiece implements Serializable {
     private int height;
     private TetrisPiece next; // We'll use this to link each piece to its "next" rotation.
     private Color color;
+    private int id;
     static private TetrisPiece[] pieces;	// array of rotations for this piece
 
 
@@ -73,7 +74,10 @@ public class TetrisPiece implements Serializable {
         }
         this.height = maxHeight;
 
-        if (this.color == null) this.color = Color.WHITE;
+        if (this.color == null) {
+            this.color = Color.WHITE; // Garbage piece
+            this.id = 1;
+        }
     }
 
     /**
@@ -86,30 +90,37 @@ public class TetrisPiece implements Serializable {
             case STICK_STR:
                 this.color = Color.CYAN;
                 this.color = this.color.brighter();
+                this.id = 2;
                 break;
             case L1_STR:
                 this.color = Color.DODGERBLUE;
                 this.color = this.color.brighter();
+                this.id = 3;
                 break;
             case L2_STR:
                 this.color = Color.ORANGE;
                 this.color = this.color.brighter();
+                this.id = 4;
                 break;
             case S1_STR:
                 this.color = Color.GREEN;
                 this.color = this.color.brighter();
+                this.id = 5;
                 break;
             case S2_STR:
                 this.color = Color.RED;
                 this.color = this.color.brighter();
+                this.id = 6;
                 break;
             case SQUARE_STR:
                 this.color = Color.YELLOW;
                 this.color = this.color.brighter();
+                this.id = 7;
                 break;
             case PYRAMID_STR:
                 this.color = Color.PURPLE;
                 this.color = this.color.brighter();
+                this.id = 8;
                 break;
         }
     }
@@ -141,11 +152,43 @@ public class TetrisPiece implements Serializable {
     public TetrisPoint[] getBody() {
         return body;
     }
+
+    /**
+     * Returns the color of this piece. The color is determined by the
+     * piece shape.
+     *
+     * @return the color of this piece
+     */
     public Color getColor() {
         return color;
     }
+
+    /**
+     * Set the color of this piece manually.
+     *
+     * @param newColor the new color of this piece
+     */
     public void setColor(Color newColor) {
         this.color = newColor;
+    }
+
+    /**
+     * Returns the ID of this piece. The ID of a piece is determined by
+     * its color.
+     *
+     * @return the id of this piece
+     */
+    public int getId() {
+        return id;
+    }
+
+    /**
+     * Set the id of this piece manually.
+     *
+     * @param newId the new id of this piece
+     */
+    public void setId(int newId) {
+        this.id = newId;
     }
 
 
@@ -261,10 +304,12 @@ public class TetrisPiece implements Serializable {
         TetrisPiece head = root;
         TetrisPiece curRoot = head.computeNextRotation();
         curRoot.setColor(root.getColor());
+        curRoot.setId(root.getId());
 
         head.next = curRoot;
         TetrisPiece nextRotation = curRoot.computeNextRotation();
         nextRotation.setColor(root.getColor());
+        nextRotation.setId(root.getId());
 
         // Continuously creating the next rotation until it reaches a rotation that is equal to its original root
         while (!nextRotation.equals(head)) {
@@ -272,6 +317,7 @@ public class TetrisPiece implements Serializable {
             curRoot = curRoot.next;
             nextRotation = curRoot.computeNextRotation();
             nextRotation.setColor(root.getColor());
+            nextRotation.setId(root.getId());
         }
 
         // Setting the next node to the head to ensure it is a circular linked list
@@ -309,8 +355,7 @@ public class TetrisPiece implements Serializable {
         for (int i = 0; i < result.length; i++) {
             result[i].x += biggestXDiff;
         }
-        TetrisPiece newPiece = new TetrisPiece(result);
-        return newPiece;
+        return new TetrisPiece(result);
     }
 
     /**
