@@ -301,7 +301,80 @@ public class TetrisBoard implements Serializable{
             throw new RuntimeException("Board must not be committed before clearing row");
         }
     }
+    /**
+     *Takes in a number of rows and adds that many rows to the bottom of the board
+     * returns true if the board is completely filled, false otherwise
+     * **/
+    public boolean addGarbage(int rows){
+        int highest = getMaxHeight();
+        if(highest + rows > height){ //if the # of rows added + max height exceeds board height, then board is filled
+            return true;
+        }
+        moveUp(rows);
+        fillGrid(rows);
+        //update colCounts
+        for(int x = 0; x < colCounts.length; x++){
+            colCounts[x] += rows;
+        }
+        //update rowCounts
+        for(int y = highest-1; y >= 0; y--){
+            rowCounts[y+rows] = rowCounts[y];
+        }
+        for(int i = 0; i < rows; i++){
+            rowCounts[i] = width-1;
+        }
+        randomHole(rows);
+        return false;
+    }
+    /**
+     * Takes in a number of rows and the height of the highest column
+     * Precondition: rows + getMaxHeight() < boardHeight
+     * Postcondition: shifts the entire board based on the number of rows
+    * **/
+    public void moveUp(int rows){
+            int highest = getMaxHeight()-1;
+            for(int i = highest; i >= 0; i--){
+                for(int j = 0; j < width; j++){
+                    tetrisGrid[j][i+rows] = tetrisGrid[j][i];
+                }
+            }
+    }
+    /**
+     * Takes in a number of rows
+     * Precondition: None
+     * Postcondition: Fills the board from the bottom up to the nth row
+     * **/
+    public void fillGrid(int n){
+        int y = 0;
+        for(int i = 0; i < n; i++){
+            for(int x = 0; x < width; x++){
+                tetrisGrid[x][y] = true;
+            }
+            y++;
+        }
+    }
 
+    /**
+     *Given n, puts a hole from the 0th to the n-1th row
+     */
+    public void randomHole(int n){
+        int col = 0;
+        int prev = -1;
+        for(int i = n-1; i >= 0; i--){
+            col = (int)(Math.random()*width);
+            tetrisGrid[col][i] = false;
+            if(i == n-1 && getColumnHeight(col) == n){
+                colCounts[col] -= 1;
+                prev = col;
+            }
+            else if(prev == col){
+                colCounts[col] -= 1;
+            }
+            else{
+                prev = -1;
+            }
+        }
+    }
     /**
      * Reverts the board to its state before up to one call to placePiece() and one to clearRows();
      * If the conditions for undo() are not met, such as calling undo() twice in a row, then the second undo() does nothing.

@@ -42,6 +42,7 @@ public class TetrisView {
     public BorderPane borderPane;
     Canvas canvas;
     GraphicsContext gc; //the graphics context will be linked to the canvas
+    Label scoreLabel =new Label(""); //label that displays score
 
     public ConnectView connectView;
     public AnimationTimer timer;
@@ -149,7 +150,12 @@ public class TetrisView {
         chatButton.setFont(new Font(12));
         chatButton.setStyle("-fx-background-color: #17871b; -fx-text-fill: white;");
 
-        HBox controls = new HBox(20, chatButton);
+        scoreLabel.setId("ScoreLabel"); //score label
+        scoreLabel.setText("Current Score: 0");
+        scoreLabel.setFont(new Font(30));
+        scoreLabel.setStyle("-fx-text-fill: #e8e6e3");
+
+        HBox controls = new HBox(20, chatButton, scoreLabel);
         controls.setPadding(new Insets(20, 20, 20, 20));
         controls.setAlignment(Pos.CENTER);
 
@@ -218,11 +224,14 @@ public class TetrisView {
                         model.modelTick(TetrisModel.MoveType.RIGHT);
                         paintBoard();
                     }
+                    updateScore();
                     lastUpdate = now;
                 }
             }
         };
-
+        /*
+        Private function to update the scoreLabel
+         */
         borderPane.setOnKeyReleased(new EventHandler<KeyEvent>() {
             @Override
             public void handle(KeyEvent k) {
@@ -254,7 +263,9 @@ public class TetrisView {
         this.stage.setScene(scene);
         this.stage.show();
     }
-
+    private void updateScore(){
+        scoreLabel.setText("Current Score: " + this.model.getScore());
+    }
 
 
     /**
