@@ -31,6 +31,7 @@ public class TetrisModel implements Serializable {
     public int currentY;
     protected int newY;
     public int floorY; // y-value that the piece will fall to
+    public boolean canPlace = true;
 
     // State of the game
     public boolean gameOn;	// true if we are playing
@@ -238,7 +239,7 @@ public class TetrisModel implements Serializable {
         }
 
         // If move is drop, instantly place piece and add new piece
-        if (failed && verb==MoveType.DOWN || verb==MoveType.DROP) {    // if it's out of bounds due to falling
+        if ((canPlace && failed && verb==MoveType.DOWN) || verb==MoveType.DROP) {    // if it's out of bounds due to falling
             TetrisApp.view.timeline.stop();
             int cleared = board.clearRows();
             if (cleared > 0) {

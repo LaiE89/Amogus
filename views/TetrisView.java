@@ -40,9 +40,7 @@ public class TetrisView {
 
     public TetrisModel model; //reference to model
     Stage stage;
-
     Button singleplayerButton, chatButton, multiplayerButton; //buttons for functions
-
     public BorderPane borderPane;
     Canvas canvas;
     GraphicsContext gc; //the graphics context will be linked to the canvas
@@ -53,7 +51,16 @@ public class TetrisView {
     int pieceWidth = 20; //width of block on display
     private double width; //height and width of canvas
     private double height;
-    private static TetrisView instance;
+
+    // Variables for in-game controls. They check which buttons are pressed
+    BooleanProperty rotatePressed = new SimpleBooleanProperty();
+    BooleanProperty rightPressed = new SimpleBooleanProperty();
+    BooleanProperty leftPressed = new SimpleBooleanProperty();
+    BooleanProperty downPressed = new SimpleBooleanProperty();
+    BooleanProperty dropPressed = new SimpleBooleanProperty();
+    BooleanBinding anyPressed = downPressed.or(rightPressed).or(leftPressed).or(rotatePressed);
+
+    private static TetrisView instance; // Instance reference for singleton
 
     /**
      * Constructor
@@ -162,29 +169,25 @@ public class TetrisView {
             this.borderPane.requestFocus();
         });
 
-        // Creating variables for checking which buttons are pressed
-        BooleanProperty rotatePressed = new SimpleBooleanProperty();
-        BooleanProperty rightPressed = new SimpleBooleanProperty();
-        BooleanProperty leftPressed = new SimpleBooleanProperty();
-        BooleanProperty downPressed = new SimpleBooleanProperty();
-        BooleanProperty dropPressed = new SimpleBooleanProperty();
-        BooleanBinding anyPressed = rotatePressed.or(rightPressed).or(leftPressed).or(downPressed);
-
         borderPane.setOnKeyPressed(new EventHandler<KeyEvent>() {
             @Override
             public void handle(KeyEvent k) {
                 //TO DO
                 if (k.getCode() == KeyCode.SPACE) {
                     rotatePressed.set(true);
+                    model.canPlace = false;
                 }
                 if (k.getCode() == KeyCode.S) {
                     downPressed.set(true);
+                    model.canPlace = false;
                 }
                 if (k.getCode() == KeyCode.A) {
                     leftPressed.set(true);
+                    model.canPlace = false;
                 }
                 if (k.getCode() == KeyCode.D) {
                     rightPressed.set(true);
+                    model.canPlace = false;
                 }
                 if (k.getCode() == KeyCode.W) {
                     if (!dropPressed.get()) {
@@ -253,6 +256,7 @@ public class TetrisView {
             if (isNowPressed) {
                 timer.start();
             }else {
+                model.canPlace = true;
                 timer.stop();
             }
         });
