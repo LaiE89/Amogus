@@ -159,6 +159,26 @@ public class TetrisView {
             this.borderPane.requestFocus();
         });
 
+        final ToggleGroup addGarbageGroup = new ToggleGroup();
+        RadioButton addGarbageToggle = new RadioButton("Human");
+        addGarbageToggle.setToggleGroup(addGarbageGroup);  addGarbageToggle.setSelected(true);
+        addGarbageToggle.setUserData(Color.SALMON);
+        addGarbageToggle.setFont(new Font(16));
+        addGarbageToggle.setStyle("-fx-text-fill: #e8e6e3");
+
+        Slider addGarbageSpeed = new Slider(0, 100, 50);
+            addGarbageSpeed.setShowTickLabels(true);
+        addGarbageSpeed.setStyle("-fx-control-inner-background: palegreen;");
+
+        addGarbageGroup.selectedToggleProperty().addListener((observable, oldVal, newVal) -> (newVal)); // create a timer
+        addGarbageSpeed.setOnMouseReleased(e -> {
+            //TO DO
+            double rateMultiplier = addGarbageSpeed.getValue() * 0.03; // modify timer
+            this.timeline.setRate(rateMultiplier);
+            this.borderPane.requestFocus();
+        });
+        
+
         // Creating variables for checking which buttons are pressed
         BooleanProperty rotatePressed = new SimpleBooleanProperty();
         BooleanProperty rightPressed = new SimpleBooleanProperty();
