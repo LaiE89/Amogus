@@ -165,6 +165,36 @@ public class TetrisView {
             this.borderPane.requestFocus();
         });
 
+        final ToggleGroup addGarbageGroup = new ToggleGroup();
+
+        RadioButton addGarbageToggle = new RadioButton("Garbage");
+        addGarbageToggle.setToggleGroup(addGarbageGroup);
+        addGarbageToggle.setSelected(true);
+        addGarbageToggle.setUserData(Color.SALMON);
+        addGarbageToggle.setFont(new Font(16));
+        addGarbageToggle.setStyle("-fx-text-fill: #e8e6e3");
+
+        Slider addGarbageSpeed = new Slider(0, 100, 50);
+        addGarbageSpeed.setShowTickLabels(true);
+        addGarbageSpeed.setStyle("-fx-control-inner-background: palegreen;");
+
+        addGarbageGroup.selectedToggleProperty().addListener((observable, oldVal, newVal) -> swapGarbage(newVal));
+        addGarbageSpeed.setOnMouseReleased(e -> {
+            //TO DO
+            double rateMultiplier = addGarbageSpeed.getValue() * 0.03;
+            this.timeline.setRate(rateMultiplier);
+            this.borderPane.requestFocus();
+        });
+
+        VBox botBox = new VBox(20, addGarbageSpeed);
+        botBox.setPadding(new Insets(20, 20, 20, 20));
+        botBox.setAlignment(Pos.TOP_CENTER);
+
+        VBox rightBox = new VBox(20, addGarbageToggle);
+        rightBox.setPadding(new Insets(20, 20, 20, 20));
+        botBox.setAlignment(Pos.TOP_CENTER);
+
+
         // Creating variables for checking which buttons are pressed
         BooleanProperty rotatePressed = new SimpleBooleanProperty();
         BooleanProperty rightPressed = new SimpleBooleanProperty();
@@ -258,11 +288,14 @@ public class TetrisView {
 
         borderPane.setTop(controls);
         borderPane.setCenter(canvas);
+        borderPane.setRight(rightBox);
+        borderPane.setBottom(botBox);
 
         var scene = new Scene(borderPane, 800, 800);
         this.stage.setScene(scene);
         this.stage.show();
     }
+
     private void updateScore(){
         scoreLabel.setText("Current Score: " + this.model.getScore());
     }
