@@ -52,6 +52,7 @@ public class TetrisView {
     private double width; //height and width of canvas
     private double height;
     private static TetrisView instance;
+    //settings variables
     private ColorAdjust visualSettings;
     private double brightness = 0;
     private double saturation = 0;
@@ -157,62 +158,70 @@ public class TetrisView {
         backButton.setFont(new Font(12));
         backButton.setStyle("-fx-background-color: #17871b; -fx-text-fill: white;");
 
+        //brightness slider
         Slider brightnessSlider = new Slider(0, 1, 0.5);
         brightnessSlider.setShowTickLabels(true);
         brightnessSlider.setStyle("-fx-control-inner-background: palegreen;");
-
+        //brightness label
         Label brightnessLabel = new Label("Brightness");
         brightnessLabel.setFont(new Font(20));
         brightnessLabel.setTextFill(Color.WHITE);
 
+        //saturation slider
         Slider saturationSlider = new Slider(0, 1, 0.5);
         saturationSlider.setShowTickLabels(true);
         saturationSlider.setStyle("-fx-control-inner-background: palegreen;");
-
+        //saturation label
         Label saturationLabel = new Label("Saturation");
         saturationLabel.setFont(new Font(20));
         saturationLabel.setTextFill(Color.WHITE);
 
+        //contrast slider
         Slider contrastSlider = new Slider(0, 1, 0.5);
         contrastSlider.setShowTickLabels(true);
         contrastSlider.setStyle("-fx-control-inner-background: palegreen;");
-
+        //contrast label
         Label contrastLabel = new Label("Contrast");
         contrastLabel.setFont(new Font(20));
         contrastLabel.setTextFill(Color.WHITE);
 
+        //volume slider
         Slider volumeSlider = new Slider(0, 100, 50);
         volumeSlider.setShowTickLabels(true);
         volumeSlider.setStyle("-fx-control-inner-background: palegreen;");
-
+        //volume label
         Label volumeLabel = new Label("Volume");
         volumeLabel.setFont(new Font(20));
         volumeLabel.setTextFill(Color.WHITE);
 
+        //background color selector
         ComboBox backGroundColor = new ComboBox();
         backGroundColor.getItems().addAll("Red", "Blue", "Green", "Yellow", "Black", "White");
         backGroundColor.setValue("Black");
-
+        //background color label
         Label backGroundColorLabel = new Label("Background Color");
         backGroundColorLabel.setFont(new Font(20));
         backGroundColorLabel.setTextFill(Color.WHITE);
-
+        //background color confirm button
         Button changeColorButton = new Button("Confirm Background Change");
         changeColorButton.setId("Settings");
         changeColorButton.setPrefSize(150, 50);
         changeColorButton.setFont(new Font(12));
         changeColorButton.setStyle("-fx-background-color: #17871b; -fx-text-fill: white;");
 
+        //hbox containing background color changing
         HBox colorChange = new HBox(20, backGroundColorLabel, backGroundColor, changeColorButton);
         colorChange.setPadding(new Insets(20, 20, 20, 20));
         colorChange.setAlignment(Pos.CENTER);
 
+        //vbox containing all visual settings
         VBox visualSettings = new VBox(20, backButton, brightnessLabel,
                 brightnessSlider, saturationLabel, saturationSlider, contrastLabel,
                 contrastSlider, volumeLabel, volumeSlider, colorChange);
         visualSettings.setPadding(new Insets(20, 20, 20, 20));
         visualSettings.setAlignment(Pos.CENTER);
 
+        //control settings label
         Label controlSettingsLabel = new Label("Controls");
         controlSettingsLabel.setFont(new Font(20));
         controlSettingsLabel.setTextFill(Color.WHITE);
@@ -223,11 +232,12 @@ public class TetrisView {
         testButton.setFont(new Font(12));
         testButton.setStyle("-fx-background-color: #17871b; -fx-text-fill: white;");
 
-
+        //vbox containing all control settings
         VBox controlSettings = new VBox(20, controlSettingsLabel, testButton);
         controlSettings.setPadding(new Insets(20, 20, 20, 20));
         controlSettings.setAlignment(Pos.CENTER);
 
+        //hbox containing all settings
         HBox settings = new HBox(50);
         settings.setPadding(new Insets(20, 20, 20, 20));
         settings.setAlignment(Pos.CENTER);
@@ -241,13 +251,11 @@ public class TetrisView {
         brightnessSlider.setOnMouseReleased(e -> {
             brightness = (brightnessSlider.getValue() - 0.5);
             updateSettings();
-            System.out.println(brightness);
         });
 
         saturationSlider.setOnMouseReleased(e -> {
             saturation = (saturationSlider.getValue() - 0.5);
             updateSettings();
-            System.out.println(saturation);
         });
 
         contrastSlider.setOnMouseReleased(e -> {
@@ -273,6 +281,9 @@ public class TetrisView {
         this.stage.setScene(scene);
         this.stage.show();
     }
+    /*
+    Updates settings according to the settings variables
+    * */
     private void updateSettings(){
         visualSettings.setBrightness(brightness);
         visualSettings.setSaturation(saturation);
