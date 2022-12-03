@@ -44,7 +44,6 @@ public class TetrisView {
     public BorderPane borderPane;
     Canvas canvas;
     GraphicsContext gc; //the graphics context will be linked to the canvas
-    Label scoreLabel =new Label(""); //label that displays score
     public ConnectView connectView;
     public AnimationTimer timer;
     private long lastUpdate = 0;
@@ -129,7 +128,7 @@ public class TetrisView {
         //Make sure to return the focus to the borderPane once you're done!
         singleplayerButton.setOnAction(e -> {
             //TO DO!
-            initGameUI();
+            initSinglePlayerUI();
             this.model.newGame();
             this.borderPane.requestFocus();
         });
@@ -142,7 +141,10 @@ public class TetrisView {
         this.stage.show();
     }
 
-    public void initGameUI() {
+    /**
+     * Initialize Singleplayer Game Interface
+     */
+    public void initSinglePlayerUI() {
         this.stage.setTitle("CSC207 Tetris");
 
         borderPane = new BorderPane();
@@ -153,29 +155,35 @@ public class TetrisView {
         canvas.setId("Canvas");
         gc = canvas.getGraphicsContext2D();
 
-        //labels
-        chatButton = new Button("Chat");
-        chatButton.setId("Chat");
-        chatButton.setPrefSize(150, 50);
-        chatButton.setFont(new Font(12));
-        chatButton.setStyle("-fx-background-color: #17871b; -fx-text-fill: white;");
+        final ToggleGroup addGarbageGroup = new ToggleGroup();
 
-        scoreLabel.setId("ScoreLabel"); //score label
-        scoreLabel.setText("Current Score: 0");
-        scoreLabel.setFont(new Font(30));
-        scoreLabel.setStyle("-fx-text-fill: #e8e6e3");
+        RadioButton addGarbageToggle = new RadioButton("Garbage");
+        addGarbageToggle.setToggleGroup(addGarbageGroup);
+        addGarbageToggle.setSelected(true);
+        addGarbageToggle.setUserData(Color.SALMON);
+        addGarbageToggle.setFont(new Font(16));
+        addGarbageToggle.setStyle("-fx-text-fill: #e8e6e3");
 
-        HBox controls = new HBox(20, chatButton, scoreLabel);
-        controls.setPadding(new Insets(20, 20, 20, 20));
-        controls.setAlignment(Pos.CENTER);
+        Slider addGarbageSpeed = new Slider(0, 100, 50);
+        addGarbageSpeed.setShowTickLabels(true);
+        addGarbageSpeed.setStyle("-fx-control-inner-background: palegreen;");
 
-        chatButton.setOnAction(e -> {
-            //TO DO!
-            this.createChatView();
+        addGarbageGroup.selectedToggleProperty().addListener((observable, oldVal, newVal) -> swapGarbage(newVal));
+        addGarbageSpeed.setOnMouseReleased(e -> {
+            //TO DO
+            double rateMultiplier = addGarbageSpeed.getValue() * 0.03;
+            this.timeline.setRate(rateMultiplier);
             this.borderPane.requestFocus();
         });
-        
-        // Controls for moving block
+
+        VBox botBox = new VBox(20, addGarbageSpeed);
+        botBox.setPadding(new Insets(20, 20, 20, 20));
+        botBox.setAlignment(Pos.TOP_CENTER);
+
+        VBox rightBox = new VBox(20, addGarbageToggle);
+        rightBox.setPadding(new Insets(20, 20, 20, 20));
+        botBox.setAlignment(Pos.TOP_CENTER);
+
         borderPane.setOnKeyPressed(new EventHandler<KeyEvent>() {
             @Override
             public void handle(KeyEvent k) {
@@ -236,7 +244,141 @@ public class TetrisView {
                         model.modelTick(TetrisModel.MoveType.LEFT);
                         paintBoard();
                     }
-                    updateScore();
+                    lastUpdate = now;
+                }
+            }
+        };
+
+        // Checking when the player releases their finger from a button
+        borderPane.setOnKeyReleased(new EventHandler<KeyEvent>() {
+            @Override
+            public void handle(KeyEvent k) {
+                //TO DO
+                if (k.getCode() == KeyCode.S) {
+                    downPressed.set(false);
+                }
+                if (k.getCode() == KeyCode.A) {
+                    leftPressed.set(false);
+                }
+                if (k.getCode() == KeyCode.D) {
+                    rightPressed.set(false);
+                }
+                if (k.getCode() == KeyCode.W) {
+                    dropPressed.set(false);
+                }
+            }
+        });
+
+        // Checking if the player pressed any button
+        anyPressed.addListener((obs, wasPressed, isNowPressed) -> {
+            if (isNowPressed) {
+                timer.start();
+            }else {
+                model.canPlace = true;
+                timer.stop();
+            }
+        });
+
+        borderPane.setCenter(canvas);
+        borderPane.setRight(rightBox);
+        borderPane.setBottom(botBox);
+
+        var scene = new Scene(borderPane, 800, 800);
+        this.stage.setScene(scene);
+        this.stage.show();
+    }
+
+    /**
+     * Initialize Multiplayer Game Interface
+     */
+    public void initGameUI() {
+        this.stage.setTitle("CSC207 Tetris");
+
+        borderPane = new BorderPane();
+        borderPane.setStyle("-fx-background-color: #121212;");
+
+        //add canvas
+        canvas = new Canvas(this.width, this.height);
+        canvas.setId("Canvas");
+        gc = canvas.getGraphicsContext2D();
+
+        //labels
+        chatButton = new Button("Chat");
+        chatButton.setId("Chat");
+        chatButton.setPrefSize(150, 50);
+        chatButton.setFont(new Font(12));
+        chatButton.setStyle("-fx-background-color: #17871b; -fx-text-fill: white;");
+
+        HBox controls = new HBox(20, chatButton);
+        controls.setPadding(new Insets(20, 20, 20, 20));
+        controls.setAlignment(Pos.CENTER);
+
+        chatButton.setOnAction(e -> {
+            //TO DO!
+            this.createChatView();
+            this.borderPane.requestFocus();
+        });
+
+        borderPane.setOnKeyPressed(new EventHandler<KeyEvent>() {
+            @Override
+            public void handle(KeyEvent k) {
+                //TO DO
+                if (k.getCode() == KeyCode.SPACE) {
+                    rotatePressed.set(true);
+                    model.canPlace = false;
+                }
+                if (k.getCode() == KeyCode.S) {
+                    downPressed.set(true);
+                    model.canPlace = false;
+                }
+                if (k.getCode() == KeyCode.A) {
+                    leftPressed.set(true);
+                    model.canPlace = false;
+                }
+                if (k.getCode() == KeyCode.D) {
+                    rightPressed.set(true);
+                    model.canPlace = false;
+                }
+                if (k.getCode() == KeyCode.W) {
+                    if (!dropPressed.get()) {
+                        model.modelTick(TetrisModel.MoveType.DROP);
+                        paintBoard();
+                        dropPressed.set(true);
+                    }
+                }
+            }
+        });
+
+        // Timer for managing the block movement speed
+        timer = new AnimationTimer() {
+            @Override
+            public void handle(long now) {
+                if (now - lastUpdate >= 80_000_000) { // Prevent this loop from occurring more than once every 80 milliseconds
+                    if (rotatePressed.get()) {
+                        model.modelTick(TetrisModel.MoveType.ROTATE);
+                        paintBoard();
+                        rotatePressed.set(false);
+                    }
+                    if (downPressed.get()) {
+                        if (timeline.getStatus() != Animation.Status.RUNNING) {
+                            timeline = new Timeline(new KeyFrame(Duration.seconds(0.25), e -> {
+                                model.modelTick(TetrisModel.MoveType.DOWN);
+                                paintBoard();
+                            }));
+                            timeline.setCycleCount(Timeline.INDEFINITE);
+                            timeline.play();
+                        }else {
+                            timeline.setRate(timeline.getCurrentRate() + 0.25);
+                        }
+                    }
+                    if (rightPressed.get()) {
+                        model.modelTick(TetrisModel.MoveType.RIGHT);
+                        paintBoard();
+                    }
+                    if (leftPressed.get()) {
+                        model.modelTick(TetrisModel.MoveType.LEFT);
+                        paintBoard();
+                    }
                     lastUpdate = now;
                 }
             }
@@ -279,10 +421,9 @@ public class TetrisView {
         this.stage.setScene(scene);
         this.stage.show();
     }
-    private void updateScore(){
-        scoreLabel.setText("Current Score: " + this.model.getScore());
-    }
 
+    private void swapGarbage(Toggle newVal) {
+    }
 
     /**
      * Methods to calibrate sizes of pixels relative to board size

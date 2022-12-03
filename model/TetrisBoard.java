@@ -399,7 +399,7 @@ public class TetrisBoard implements Serializable{
         int y = 0;
         for(int i = 0; i < n; i++){
             for(int x = 0; x < width; x++){
-                tetrisGrid[x][y] = true;
+                tetrisGrid[x][y] = 0;
             }
             y++;
         }
@@ -416,7 +416,7 @@ public class TetrisBoard implements Serializable{
         int prev = -1;
         for(int i = n-1; i >= 0; i--){
             col = (int)(Math.random()*width);
-            tetrisGrid[col][i] = false;
+            tetrisGrid[col][i] = 0;
             if(i == n-1 && getColumnHeight(col) == n){
                 colCounts[col] -= 1;
                 prev = col;
