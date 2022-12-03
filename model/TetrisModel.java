@@ -2,6 +2,8 @@ package model;
 
 import multiplayer.Client;
 import views.ConnectView;
+import views.GameView;
+import views.MultiplayerView;
 import views.TetrisView;
 
 import java.io.*;
@@ -240,7 +242,7 @@ public class TetrisModel implements Serializable {
 
         // If move is drop, instantly place piece and add new piece
         if ((canPlace && failed && verb==MoveType.DOWN) || verb==MoveType.DROP) {    // if it's out of bounds due to falling
-            TetrisApp.view.timeline.stop();
+            TetrisApp.view.gameView.timeline.stop();
             int cleared = board.clearRows();
             if (cleared > 0) {
                     // scores go up by 5, 10, 20, 40 as more rows are cleared
@@ -277,8 +279,10 @@ public class TetrisModel implements Serializable {
         // If the game is a multiplayer game, just exit the game and go to main menu
         if (!isMultiplayer) {
             TetrisApp.view.initUI();
-            TetrisApp.view.timer.stop();
-            TetrisApp.view.timeline.stop();
+            TetrisApp.view.gameView.timer.stop();
+            TetrisApp.view.gameView.timeline.stop();
+            //TetrisApp.view.timer.stop();
+            //TetrisApp.view.timeline.stop();
         }else { // If the game is a multiplayer game, tell the server that this player lost
             this.client.sendPacket(this.client.numConnections, true,true);
             this.isMultiplayer = false;

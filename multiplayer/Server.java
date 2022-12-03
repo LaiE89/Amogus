@@ -67,7 +67,7 @@ public class Server extends Thread{
         while (!serverSocket.isClosed()) {
             if (!isGameStarted && numConnections < 4) {
                 listenForServerRequest();
-            }else if (numConnections >= 4) {
+            }else {
                 fullServerRequest();
             }
         }
@@ -83,6 +83,11 @@ public class Server extends Thread{
         Socket clientSocket = null;
         try {
             clientSocket = serverSocket.accept();
+            // If a lobby is full (i.e. 4 players is the max limit of a lobby) or game already started, checks for any player trying to connect to the lobby and kicks them out.
+            if (isGameStarted || numConnections >= 4) {
+                System.out.println("CLIENT WITH IP: " + clientSocket.getInetAddress() + ", AND PORT: " + clientSocket.getPort() + " HAS REQUESTED TO JOIN. THE CURRENT SERVER IS FULL, KICKING HIM OUT.");
+                clientSocket.close();
+            }
             serverDos.put(clientSocket, new ObjectOutputStream(clientSocket.getOutputStream()));
             serverDis.put(clientSocket, new ObjectInputStream(clientSocket.getInputStream()));
             clientSocket.setSoTimeout(clientReadTime);
@@ -100,7 +105,7 @@ public class Server extends Thread{
      * player trying to connect to the lobby and kicks them out.
      */
     public void fullServerRequest() {
-        System.out.println("Listening for server request");
+        System.out.println("Listening for server request when server is full");
         Socket clientSocket = null;
         try {
             clientSocket = serverSocket.accept();

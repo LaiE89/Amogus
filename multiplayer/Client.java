@@ -3,6 +3,7 @@ package multiplayer;
 import javafx.application.Platform;
 import model.TetrisModel;
 import views.ConnectView;
+import views.MultiplayerView;
 import views.TetrisView;
 
 import java.io.ObjectInputStream;
@@ -76,17 +77,17 @@ public class Client extends Thread{
             //this.isGameStarted = dis.readBoolean();
             Packet value = (Packet) dis.readObject();
             this.numConnections = value.getNumConnections();
-            this.isGameStarted = value.getIsGameStarted();
             Platform.runLater(new Runnable() {
                 @Override public void run() {
                     connectView.startButton.setText("Number of players: " + numConnections);
                 }
             });
-            if (this.isGameStarted) {
+            if (!this.isGameStarted && value.getIsGameStarted()) {
+                this.isGameStarted = true;
                 Platform.runLater(new Runnable() {
                     @Override
                     public void run() {
-                        tetrisView.initGameUI();
+                        tetrisView.createMultiplayerView();
                         model.newGame();
                         connectView.dialog.close();
                         tetrisView.borderPane.requestFocus();
@@ -102,8 +103,8 @@ public class Client extends Thread{
                     public void run() {
                         if (isGameStarted) {
                             tetrisView.initUI();
-                            tetrisView.timer.stop();
-                            tetrisView.timeline.stop();
+                            tetrisView.gameView.timer.stop();
+                            tetrisView.gameView.timeline.stop();
                             model.gameOn = false;
                         }
                         else {
