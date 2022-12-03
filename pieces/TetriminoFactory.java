@@ -6,6 +6,7 @@ import model.TetrisPiece;
 * **/
 
 public class TetriminoFactory {
+    private int totalTetriminos = 0; //total count of all tetriminos created
     public TetrisPiece getTetrimino(String blockType){
         TetrisPiece piece;
         switch(blockType){
@@ -34,6 +35,13 @@ public class TetriminoFactory {
                 piece = new TetrisPiece("0 0	0 1	 0 2  0 3");
                 break;
         }
+        totalTetriminos += 1;
         return piece;
     }
+
+    /**
+     *
+     * @return total number of tetriminos created
+     */
+    public int getTotalTetriminos(){return this.totalTetriminos;}
 }
