@@ -470,4 +470,50 @@ public class SanityTests {
         board2.commit();
         assertEquals(1, rcleared);
     }
+    @Test
+    void addGarbageTest(){
+        TetrisBoard board = new TetrisBoard(8, 12); board.commit();
+        TetrisPiece piece = new TetrisPiece(TetrisPiece.S1_STR);
+        board.placePiece(piece,0, 0); board.commit();
+        System.out.println(board.addGarbage(10));
+        System.out.println(board);
+        for(int i = 0; i < board.getWidth(); i++){
+            System.out.print(board.getColumnHeight(i) + " ");
+        }
+        System.out.println();
+        for(int i = 0; i < board.getHeight(); i++){
+            System.out.print(board.getRowWidth(i) + " ");
+        }
+    }
+    @Test
+    void randomHoleTest(){
+        TetrisBoard board = new TetrisBoard(4, 12);board.commit();
+        TetrisPiece piece = new TetrisPiece(TetrisPiece.STICK_STR);
+        piece = piece.computeNextRotation();
+        board.placePiece(piece, 0 ,0 ); board.commit();
+        board.addGarbage(3);
+        board.randomHole(3);
+        System.out.println(board);
+        for(int i = 0; i < board.getWidth(); i++){
+            System.out.print(board.getColumnHeight(i) + " ");
+        }
+        System.out.println();
+        for(int i = 0; i < board.getHeight(); i++){
+            System.out.print(board.getRowWidth(i) + " ");
+        }
+    }
+    @Test
+    void randomHoleTest2(){
+        TetrisBoard board = new TetrisBoard(2, 12);board.commit();
+        board.addGarbage(3);
+        board.randomHole(3);
+        System.out.println(board);
+        for(int i = 0; i < board.getWidth(); i++){
+            System.out.print(board.getColumnHeight(i) + " ");
+        }
+        System.out.println();
+        for(int i = 0; i < board.getHeight(); i++){
+            System.out.print(board.getRowWidth(i) + " ");
+        }
+    }
 }
