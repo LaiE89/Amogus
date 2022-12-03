@@ -26,6 +26,9 @@ import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.stage.Stage;
 import javafx.util.Duration;
+import model.TetrisPoint;
+
+import java.util.ArrayList;
 
 
 /**
@@ -37,13 +40,10 @@ public class TetrisView {
 
     public TetrisModel model; //reference to model
     Stage stage;
-
     Button singleplayerButton, chatButton, multiplayerButton, settingsButton, backButton; //buttons for functions
-
     public BorderPane borderPane;
     Canvas canvas;
     GraphicsContext gc; //the graphics context will be linked to the canvas
-
     public ConnectView connectView;
     public AnimationTimer timer;
     private long lastUpdate = 0;
@@ -51,13 +51,23 @@ public class TetrisView {
     int pieceWidth = 20; //width of block on display
     private double width; //height and width of canvas
     private double height;
-    private static TetrisView instance;
+
     //settings variables
     private ColorAdjust visualSettings;
     private double brightness = 0;
     private double saturation = 0;
     private double contrast = 0;
     private String backgroundColor = "black";
+
+    // Variables for in-game controls. They check which buttons are pressed
+    BooleanProperty rotatePressed = new SimpleBooleanProperty();
+    BooleanProperty rightPressed = new SimpleBooleanProperty();
+    BooleanProperty leftPressed = new SimpleBooleanProperty();
+    BooleanProperty downPressed = new SimpleBooleanProperty();
+    BooleanProperty dropPressed = new SimpleBooleanProperty();
+    BooleanBinding anyPressed = downPressed.or(rightPressed).or(leftPressed).or(rotatePressed);
+    
+    private static TetrisView instance; // Instance reference for singleton
 
     /**
      * Constructor
@@ -131,7 +141,7 @@ public class TetrisView {
         //Make sure to return the focus to the borderPane once you're done!
         singleplayerButton.setOnAction(e -> {
             //TO DO!
-            initGameUI();
+            initSinglePlayerUI();
             this.model.newGame();
             this.borderPane.requestFocus();
         });
@@ -151,7 +161,11 @@ public class TetrisView {
         this.stage.setScene(scene);
         this.stage.show();
     }
-    public void initSettings(){
+
+    /**
+     * Initialize Settings interface
+     */
+    public void initSettings() {
         backButton = new Button("Back");
         backButton.setId("Settings");
         backButton.setPrefSize(150, 50);
@@ -268,7 +282,7 @@ public class TetrisView {
         });
 
         changeColorButton.setOnAction(e -> {
-            backgroundColor = (String)backGroundColor.getValue();
+            backgroundColor = (String) backGroundColor.getValue();
             borderPane.setStyle("-fx-background-color: " + backgroundColor);
         });
 
@@ -281,6 +295,157 @@ public class TetrisView {
         this.stage.setScene(scene);
         this.stage.show();
     }
+
+    /**
+     * Initialize Singleplayer Game Interface
+     */
+    public void initSinglePlayerUI() {
+        this.stage.setTitle("CSC207 Tetris");
+
+        borderPane = new BorderPane();
+        borderPane.setStyle("-fx-background-color: " + backgroundColor);
+
+        //add canvas
+        canvas = new Canvas(this.width, this.height);
+        canvas.setId("Canvas");
+        gc = canvas.getGraphicsContext2D();
+
+        final ToggleGroup addGarbageGroup = new ToggleGroup();
+
+        RadioButton addGarbageToggle = new RadioButton("Garbage");
+        addGarbageToggle.setToggleGroup(addGarbageGroup);
+        addGarbageToggle.setSelected(true);
+        addGarbageToggle.setUserData(Color.SALMON);
+        addGarbageToggle.setFont(new Font(16));
+        addGarbageToggle.setStyle("-fx-text-fill: #e8e6e3");
+
+        Slider addGarbageSpeed = new Slider(0, 100, 50);
+        addGarbageSpeed.setShowTickLabels(true);
+        addGarbageSpeed.setStyle("-fx-control-inner-background: palegreen;");
+
+        addGarbageGroup.selectedToggleProperty().addListener((observable, oldVal, newVal) -> swapGarbage(newVal));
+        addGarbageSpeed.setOnMouseReleased(e -> {
+            //TO DO
+            //double rateMultiplier = addGarbageSpeed.getValue() * 0.03;
+            //this.timeline.setRate(rateMultiplier);
+            //this.borderPane.requestFocus();
+        });
+
+        VBox botBox = new VBox(20, addGarbageSpeed);
+        botBox.setPadding(new Insets(20, 20, 20, 20));
+        botBox.setAlignment(Pos.TOP_CENTER);
+
+        VBox rightBox = new VBox(20, addGarbageToggle);
+        rightBox.setPadding(new Insets(20, 20, 20, 20));
+        botBox.setAlignment(Pos.TOP_CENTER);
+
+        // Detecting controls press
+        dropPressed.set(false);
+        borderPane.setOnKeyPressed(new EventHandler<KeyEvent>() {
+            @Override
+            public void handle(KeyEvent k) {
+                //TO DO
+                if (k.getCode() == KeyCode.SPACE) {
+                    rotatePressed.set(true);
+                    model.canPlace = false;
+                }
+                if (k.getCode() == KeyCode.S) {
+                    downPressed.set(true);
+                    model.canPlace = false;
+                }
+                if (k.getCode() == KeyCode.A) {
+                    leftPressed.set(true);
+                    model.canPlace = false;
+                }
+                if (k.getCode() == KeyCode.D) {
+                    rightPressed.set(true);
+                    model.canPlace = false;
+                }
+                if (k.getCode() == KeyCode.W) {
+                    if (!dropPressed.get()) {
+                        model.modelTick(TetrisModel.MoveType.DROP);
+                        paintBoard();
+                        dropPressed.set(true);
+                    }
+                }
+            }
+        });
+
+        // Timer for managing the block movement speed
+        timer = new AnimationTimer() {
+            @Override
+            public void handle(long now) {
+                if (now - lastUpdate >= 80_000_000) { // Prevent this loop from occurring more than once every 80 milliseconds
+                    if (rotatePressed.get()) {
+                        model.modelTick(TetrisModel.MoveType.ROTATE);
+                        paintBoard();
+                        rotatePressed.set(false);
+                    }
+                    if (downPressed.get()) {
+                        if (timeline.getStatus() != Animation.Status.RUNNING) {
+                            timeline = new Timeline(new KeyFrame(Duration.seconds(0.25), e -> {
+                                model.modelTick(TetrisModel.MoveType.DOWN);
+                                paintBoard();
+                            }));
+                            timeline.setCycleCount(Timeline.INDEFINITE);
+                            timeline.play();
+                        }else {
+                            timeline.setRate(timeline.getCurrentRate() + 0.25);
+                        }
+                    }
+                    if (rightPressed.get()) {
+                        model.modelTick(TetrisModel.MoveType.RIGHT);
+                        paintBoard();
+                    }
+                    if (leftPressed.get()) {
+                        model.modelTick(TetrisModel.MoveType.LEFT);
+                        paintBoard();
+                    }
+                    lastUpdate = now;
+                }
+            }
+        };
+
+        // Checking when the player releases their finger from a button
+        borderPane.setOnKeyReleased(new EventHandler<KeyEvent>() {
+            @Override
+            public void handle(KeyEvent k) {
+                //TO DO
+                if (k.getCode() == KeyCode.S) {
+                    downPressed.set(false);
+                }
+                if (k.getCode() == KeyCode.A) {
+                    leftPressed.set(false);
+                }
+                if (k.getCode() == KeyCode.D) {
+                    rightPressed.set(false);
+                }
+                if (k.getCode() == KeyCode.W) {
+                    dropPressed.set(false);
+                }
+            }
+        });
+
+        // Checking if the player pressed any button
+        anyPressed.addListener((obs, wasPressed, isNowPressed) -> {
+            if (isNowPressed) {
+                timer.start();
+            }else {
+                model.canPlace = true;
+                timer.stop();
+            }
+        });
+
+        borderPane.setCenter(canvas);
+        borderPane.setRight(rightBox);
+        borderPane.setBottom(botBox);
+        updateSettings();
+
+        var scene = new Scene(borderPane, 800, 800);
+        this.stage.setScene(scene);
+        this.stage.show();
+    }
+
     /*
     Updates settings according to the settings variables
     * */
@@ -290,6 +455,10 @@ public class TetrisView {
         visualSettings.setContrast(contrast);
         borderPane.setEffect(visualSettings);
     }
+
+    /**
+     * Initialize Multiplayer Game Interface
+     */
     public void initGameUI() {
         this.stage.setTitle("CSC207 Tetris");
 
@@ -318,40 +487,43 @@ public class TetrisView {
             this.borderPane.requestFocus();
         });
 
-        // Creating variables for checking which buttons are pressed
-        BooleanProperty rotatePressed = new SimpleBooleanProperty();
-        BooleanProperty rightPressed = new SimpleBooleanProperty();
-        BooleanProperty leftPressed = new SimpleBooleanProperty();
-        BooleanProperty downPressed = new SimpleBooleanProperty();
-        BooleanBinding anyPressed = rotatePressed.or(rightPressed).or(leftPressed).or(downPressed);
-
+        // Detecting controls press
+        dropPressed.set(false);
         borderPane.setOnKeyPressed(new EventHandler<KeyEvent>() {
             @Override
             public void handle(KeyEvent k) {
                 //TO DO
                 if (k.getCode() == KeyCode.SPACE) {
                     rotatePressed.set(true);
+                    model.canPlace = false;
                 }
                 if (k.getCode() == KeyCode.S) {
                     downPressed.set(true);
+                    model.canPlace = false;
                 }
                 if (k.getCode() == KeyCode.A) {
                     leftPressed.set(true);
+                    model.canPlace = false;
                 }
                 if (k.getCode() == KeyCode.D) {
                     rightPressed.set(true);
+                    model.canPlace = false;
                 }
                 if (k.getCode() == KeyCode.W) {
-                    model.modelTick(TetrisModel.MoveType.DROP);
-                    paintBoard();
+                    if (!dropPressed.get()) {
+                        model.modelTick(TetrisModel.MoveType.DROP);
+                        paintBoard();
+                        dropPressed.set(true);
+                    }
                 }
             }
         });
 
+        // Timer for managing the block movement speed
         timer = new AnimationTimer() {
             @Override
             public void handle(long now) {
-                if (now - lastUpdate >= 75_000_000) { // Prevent this loop from occurring more than once every 75 milliseconds
+                if (now - lastUpdate >= 80_000_000) { // Prevent this loop from occurring more than once every 80 milliseconds
                     if (rotatePressed.get()) {
                         model.modelTick(TetrisModel.MoveType.ROTATE);
                         paintBoard();
@@ -366,15 +538,15 @@ public class TetrisView {
                             timeline.setCycleCount(Timeline.INDEFINITE);
                             timeline.play();
                         }else {
-                            timeline.setRate(timeline.getCurrentRate() + 0.25f);
+                            timeline.setRate(timeline.getCurrentRate() + 0.25);
                         }
                     }
                     if (rightPressed.get()) {
-                        model.modelTick(TetrisModel.MoveType.LEFT);
+                        model.modelTick(TetrisModel.MoveType.RIGHT);
                         paintBoard();
                     }
                     if (leftPressed.get()) {
-                        model.modelTick(TetrisModel.MoveType.RIGHT);
+                        model.modelTick(TetrisModel.MoveType.LEFT);
                         paintBoard();
                     }
                     lastUpdate = now;
@@ -382,6 +554,7 @@ public class TetrisView {
             }
         };
 
+        // Checking when the player releases their finger from a button
         borderPane.setOnKeyReleased(new EventHandler<KeyEvent>() {
             @Override
             public void handle(KeyEvent k) {
@@ -395,13 +568,18 @@ public class TetrisView {
                 if (k.getCode() == KeyCode.D) {
                     rightPressed.set(false);
                 }
+                if (k.getCode() == KeyCode.W) {
+                    dropPressed.set(false);
+                }
             }
         });
 
+        // Checking if the player pressed any button
         anyPressed.addListener((obs, wasPressed, isNowPressed) -> {
             if (isNowPressed) {
                 timer.start();
             }else {
+                model.canPlace = true;
                 timer.stop();
             }
         });
@@ -415,7 +593,8 @@ public class TetrisView {
         this.stage.show();
     }
 
-
+    private void swapGarbage(Toggle newVal) {
+    }
 
     /**
      * Methods to calibrate sizes of pixels relative to board size
@@ -424,7 +603,7 @@ public class TetrisView {
         return (int) Math.round(this.height -1 - (y+1)*dY());
     }
     private final int xPixel(int x) {
-        return (int) Math.round(this.width -1 - (x+1)*dX());
+        return (int) Math.round((x)*dX());
     }
     private final float dX() {
         return( ((float)(this.width-2)) / this.model.getBoard().getWidth() );
@@ -438,14 +617,12 @@ public class TetrisView {
      * Draw the board
      */
     public void paintBoard() {
-
-        // Draw a rectangle around the whole screen
-        gc.setStroke(Color.GREEN);
-        gc.setFill(Color.GREEN);
+        gc.setStroke(Color.BLACK);
+        gc.setFill(Color.BLACK);
         gc.fillRect(0, 0, this.width-1, this.height-1);
 
         // Draw the line separating the top area on the screen
-        gc.setStroke(Color.BLACK);
+        gc.setStroke(Color.GRAY);
         int spacerY = yPixel(this.model.getBoard().getHeight() - this.model.BUFFERZONE - 1);
         gc.strokeLine(0, spacerY, this.width-1, spacerY);
 
@@ -453,6 +630,14 @@ public class TetrisView {
         final int dx = Math.round(dX()-2);
         final int dy = Math.round(dY()-2);
         final int bWidth = this.model.getBoard().getWidth();
+
+        // Painting the placement indicator for the current piece
+        int floorYHeight = model.floorY;
+        TetrisPoint[] currentPieceBody = model.currentPiece.getBody();
+        for (int i = 0; i < currentPieceBody.length; i++) {
+            gc.setStroke(model.currentPiece.getColor());
+            gc.strokeRect(xPixel(model.currentX + currentPieceBody[i].x) + 1, yPixel(floorYHeight + currentPieceBody[i].y)+1, dx, dy);
+        }
 
         int x, y;
         // Loop through and draw all the blocks; sizes of blocks are calibrated relative to screen size
@@ -462,9 +647,9 @@ public class TetrisView {
             final int yHeight = this.model.getBoard().getColumnHeight(x);
             for (y=0; y<yHeight; y++) {
                 if (this.model.getBoard().getGrid(x, y)) {
-                    gc.setFill(Color.RED);
+                    gc.setFill(this.model.getBoard().getGridColor(x, y));
                     gc.fillRect(left+1, yPixel(y)+1, dx, dy);
-                    gc.setFill(Color.GREEN);
+                    gc.setFill(Color.BLACK);
                 }
             }
         }
@@ -480,7 +665,7 @@ public class TetrisView {
     /**
      * Create the view to connect to a game lobby or start a game lobby
      */
-    private void createConnectView(){
+    private void createConnectView() {
         connectView = new ConnectView(this, model);
     }
 

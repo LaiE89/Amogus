@@ -1,6 +1,8 @@
 // TetrisBoard.java
 package model;
 
+import javafx.scene.paint.Color;
+
 import java.io.*;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -11,7 +13,7 @@ import java.util.*;
 public class TetrisBoard implements Serializable{
     private int width; //board height and width
     private int height;
-    protected boolean[][] tetrisGrid; //board grid
+    protected int[][] tetrisGrid; //board grid. Every cell will take an int value which represents the id of the piece that the cell belongs to.
     boolean committed; //indicates if the board is in a 'committed' state, meaning can't undo!
 
     //In your implementation, you'll want to keep counts of filled grid positions in each column.
@@ -23,7 +25,7 @@ public class TetrisBoard implements Serializable{
 
     //In addition, you'll need to allocate some space to back up your grid data.
     //This will be important when you implement "undo".
-    private boolean[][] backupGrid; //to back up your grid
+    private int[][] backupGrid; //to back up your grid
     private int backupColCounts[]; //to back up your row counts
     private int backupRowCounts[]; //to back up your column counts
 
@@ -42,13 +44,13 @@ public class TetrisBoard implements Serializable{
     public TetrisBoard(int aWidth, int aHeight) {
         width = aWidth;
         height = aHeight;
-        tetrisGrid = new boolean[width][height];
+        tetrisGrid = new int[width][height];
 
         colCounts = new int[width];
         rowCounts = new int[height];
 
         //init backup storage, for undo
-        backupGrid = new boolean[width][height];
+        backupGrid = new int[width][height];
         backupColCounts = new int[width];
         backupRowCounts = new int[height];
     }
@@ -59,7 +61,7 @@ public class TetrisBoard implements Serializable{
     public void newGame() {
         for (int x = 0; x < tetrisGrid.length; x++) {
             for (int y = 0; y < tetrisGrid[x].length; y++) {
-                tetrisGrid[x][y] = false;
+                tetrisGrid[x][y] = 0;
                 }
             }
         Arrays.fill(colCounts, 0);
@@ -124,9 +126,40 @@ public class TetrisBoard implements Serializable{
      * @return true if the given block at x,y is filled, else false
      */
     public boolean getGrid(int x, int y) {
-        if (x >= width || x < 0 || y >= height || y < 0 || tetrisGrid[x][y])
+        if (x >= width || x < 0 || y >= height || y < 0 || tetrisGrid[x][y] > 0)
             return true;
         return false;
+    }
+
+    /**
+     * Returns the color of the block at the specified position if the given
+     * block is filled in the board. Otherwise, returns a null value.
+     *
+     * @param x grid position, x
+     * @param y grid position, y
+     *
+     * @return a color if the given block at x,y is filled, else returns null
+     */
+    public Color getGridColor(int x, int y) {
+        switch (tetrisGrid[x][y]) {
+            case 1:
+                return Color.WHITE;
+            case 2:
+                return Color.CYAN.brighter();
+            case 3:
+                return Color.DODGERBLUE.brighter();
+            case 4:
+                return Color.ORANGE.brighter();
+            case 5:
+                return Color.GREEN.brighter();
+            case 6:
+                return Color.RED.brighter();
+            case 7:
+                return Color.YELLOW.brighter();
+            case 8:
+                return Color.PURPLE.brighter();
+        }
+        return null;
     }
 
     /**
@@ -151,7 +184,7 @@ public class TetrisBoard implements Serializable{
         for (int i = 0; i < pieceLowest.length; i++) {
             int curSpace = 0;
             for (int j = y-1; j >= 0; j--) {
-                if (!this.tetrisGrid[x + i][j]) {
+                if (this.tetrisGrid[x + i][j] == 0) {
                     curSpace += 1;
                 }else {
                     break;
@@ -159,6 +192,7 @@ public class TetrisBoard implements Serializable{
             }
             heightOfCols[i] = y - curSpace;
         }
+
         HashMap<Integer, ArrayList<Integer>> largestCol = getLargest(heightOfCols);
         int largestColHeight = (int)largestCol.keySet().toArray()[0];
         ArrayList<Integer> largestColIndex = largestCol.get(largestColHeight);
@@ -172,7 +206,22 @@ public class TetrisBoard implements Serializable{
                 smallestInsertionLength = insertionLength;
             }
         }
-        return largestColHeight - smallestInsertionLength;
+        int potentialDiff = largestColHeight - smallestInsertionLength;
+
+        // Adding extra height if the difference between the largest insertion length
+        // and any other insertion length is greater than the difference between the
+        // tallest column and any other column.
+        int extraDiff = 0;
+        for (int i = 0; i < heightOfCols.length; i++) {
+            if (pieceLowest[i] < smallestInsertionLength) {
+                int diffPieceLowest = smallestInsertionLength - pieceLowest[i];
+                int diffHeights = largestColHeight - heightOfCols[i];
+                if (diffPieceLowest > diffHeights && diffPieceLowest - diffHeights > extraDiff) {
+                    extraDiff = diffPieceLowest - diffHeights;
+                }
+            }
+        }
+        return potentialDiff + extraDiff;
     }
 
     /**
@@ -240,7 +289,7 @@ public class TetrisBoard implements Serializable{
                     } else if (getGrid(curPoint.x, curPoint.y)) { // Collide with existing blocks
                         return ADD_BAD;
                     } else { // Adding point of the body to the new location
-                        this.tetrisGrid[curPoint.x][curPoint.y] = true;
+                        this.tetrisGrid[curPoint.x][curPoint.y] = piece.getId();
                     }
                 }
             }
@@ -285,7 +334,7 @@ public class TetrisBoard implements Serializable{
                     for (int y = row; y < this.height - 1; y++) {
                         for (int x = 0; x < this.width; x++) {
                             if (y == this.height - 1) {
-                                tetrisGrid[x][y] = false;
+                                tetrisGrid[x][y] = 0;
                             } else {
                                 tetrisGrid[x][y] = tetrisGrid[x][y + 1];
                             }
@@ -301,7 +350,85 @@ public class TetrisBoard implements Serializable{
             throw new RuntimeException("Board must not be committed before clearing row");
         }
     }
+    /**
+     *Takes in a number of rows and adds that many rows to the bottom of the board
+     * returns true if the board is completely filled, false otherwise
+     * Precondition: rows >= 0
+     * Postcondition: Adds garbage rows from 0th row to the n-1th row
+     * **/
+    public boolean addGarbage(int rows){
+        int highest = getMaxHeight();
+        if(highest + rows > height){ //if the # of rows added + max height exceeds board height, then board is filled
+            return true;
+        }
+        moveUp(rows);
+        fillGrid(rows);
+        //update colCounts
+        for(int x = 0; x < colCounts.length; x++){
+            colCounts[x] += rows;
+        }
+        //update rowCounts
+        for(int y = highest-1; y >= 0; y--){
+            rowCounts[y+rows] = rowCounts[y];
+        }
+        for(int i = 0; i < rows; i++){
+            rowCounts[i] = width-1;
+        }
+        randomHole(rows);
+        return false;
+    }
+    /**
+     * Takes in a number of rows and the height of the highest column
+     * Precondition: rows + getMaxHeight() < boardHeight
+     * Postcondition: shifts the entire board based on the number of rows
+    * **/
+    public void moveUp(int rows){
+            int highest = getMaxHeight()-1;
+            for(int i = highest; i >= 0; i--){
+                for(int j = 0; j < width; j++){
+                    tetrisGrid[j][i+rows] = tetrisGrid[j][i];
+                }
+            }
+    }
+    /**
+     * Takes in number of rows n and fills board up to nth row
+     * Precondition: None
+     * Postcondition: Fills the board from the bottom up to the nth row
+     * **/
+    public void fillGrid(int n){
+        int y = 0;
+        for(int i = 0; i < n; i++){
+            for(int x = 0; x < width; x++){
+                tetrisGrid[x][y] = 0;
+            }
+            y++;
+        }
+    }
 
+    /**
+     *Given n, puts a hole from the 0th to the n-1th row
+     * Precondition: n > 0
+     * Postcondition: Randomly changes one boolean value on each row of tetrisGrid starting from the 1st row
+     * up to nth row
+     */
+    public void randomHole(int n){
+        int col = 0;
+        int prev = -1;
+        for(int i = n-1; i >= 0; i--){
+            col = (int)(Math.random()*width);
+            tetrisGrid[col][i] = 0;
+            if(i == n-1 && getColumnHeight(col) == n){
+                colCounts[col] -= 1;
+                prev = col;
+            }
+            else if(prev == col){
+                colCounts[col] -= 1;
+            }
+            else{
+                prev = -1;
+            }
+        }
+    }
     /**
      * Reverts the board to its state before up to one call to placePiece() and one to clearRows();
      * If the conditions for undo() are not met, such as calling undo() twice in a row, then the second undo() does nothing.
@@ -354,7 +481,7 @@ public class TetrisBoard implements Serializable{
 
         for (int x = 0; x < tetrisGrid.length; x++) {
             for (int y = 0; y < tetrisGrid[x].length; y++) {
-                if (tetrisGrid[x][y]) { //means is not an empty cell
+                if (tetrisGrid[x][y] > 0) { //means is not an empty cell
                     colCounts[x] = y + 1; //these tallies can be useful when clearing rows or placing pieces
                     rowCounts[y]++;
                 }
