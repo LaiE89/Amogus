@@ -5,7 +5,7 @@ import javafx.animation.AnimationTimer;
 import javafx.beans.binding.BooleanBinding;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
-import javafx.scene.shape.Rectangle;
+import javafx.scene.effect.ColorAdjust;
 import model.TetrisModel;
 
 import javafx.animation.KeyFrame;
@@ -40,7 +40,7 @@ public class TetrisView {
 
     public TetrisModel model; //reference to model
     Stage stage;
-    Button singleplayerButton, chatButton, multiplayerButton; //buttons for functions
+    Button singleplayerButton, chatButton, multiplayerButton, settingsButton, backButton; //buttons for functions
     public BorderPane borderPane;
     Canvas canvas;
     GraphicsContext gc; //the graphics context will be linked to the canvas
@@ -52,6 +52,13 @@ public class TetrisView {
     private double width; //height and width of canvas
     private double height;
 
+    //settings variables
+    private ColorAdjust visualSettings;
+    private double brightness = 0;
+    private double saturation = 0;
+    private double contrast = 0;
+    private String backgroundColor = "black";
+
     // Variables for in-game controls. They check which buttons are pressed
     BooleanProperty rotatePressed = new SimpleBooleanProperty();
     BooleanProperty rightPressed = new SimpleBooleanProperty();
@@ -59,7 +66,7 @@ public class TetrisView {
     BooleanProperty downPressed = new SimpleBooleanProperty();
     BooleanProperty dropPressed = new SimpleBooleanProperty();
     BooleanBinding anyPressed = downPressed.or(rightPressed).or(leftPressed).or(rotatePressed);
-
+    
     private static TetrisView instance; // Instance reference for singleton
 
     /**
@@ -97,7 +104,7 @@ public class TetrisView {
         this.height = this.model.getHeight()*pieceWidth + 2;
 
         borderPane = new BorderPane();
-        borderPane.setStyle("-fx-background-color: #121212;");
+        borderPane.setStyle("-fx-background-color: " + backgroundColor);
 
         //add buttons
         singleplayerButton = new Button("Singleplayer");
@@ -112,7 +119,13 @@ public class TetrisView {
         multiplayerButton.setFont(new Font(12));
         multiplayerButton.setStyle("-fx-background-color: #17871b; -fx-text-fill: white;");
 
-        VBox controls = new VBox(20, singleplayerButton, multiplayerButton);
+        settingsButton = new Button("Settings");
+        settingsButton.setId("Settings");
+        settingsButton.setPrefSize(150, 50);
+        settingsButton.setFont(new Font(12));
+        settingsButton.setStyle("-fx-background-color: #17871b; -fx-text-fill: white;");
+
+        VBox controls = new VBox(20, singleplayerButton, multiplayerButton, settingsButton);
         controls.setPadding(new Insets(20, 20, 20, 20));
         controls.setAlignment(Pos.CENTER);
 
@@ -133,8 +146,150 @@ public class TetrisView {
             this.borderPane.requestFocus();
         });
 
+        settingsButton.setOnAction(e -> {
+            initSettings();
+            this.borderPane.requestFocus();
+        });
+
+        visualSettings = new ColorAdjust();
+        visualSettings.setBrightness(brightness);
 
         borderPane.setCenter(controls);
+        updateSettings();
+
+        var scene = new Scene(borderPane, 800, 800);
+        this.stage.setScene(scene);
+        this.stage.show();
+    }
+
+    /**
+     * Initialize Settings interface
+     */
+    public void initSettings() {
+        backButton = new Button("Back");
+        backButton.setId("Settings");
+        backButton.setPrefSize(150, 50);
+        backButton.setFont(new Font(12));
+        backButton.setStyle("-fx-background-color: #17871b; -fx-text-fill: white;");
+
+        //brightness slider
+        Slider brightnessSlider = new Slider(0, 1, 0.5);
+        brightnessSlider.setShowTickLabels(true);
+        brightnessSlider.setStyle("-fx-control-inner-background: palegreen;");
+        //brightness label
+        Label brightnessLabel = new Label("Brightness");
+        brightnessLabel.setFont(new Font(20));
+        brightnessLabel.setTextFill(Color.WHITE);
+
+        //saturation slider
+        Slider saturationSlider = new Slider(0, 1, 0.5);
+        saturationSlider.setShowTickLabels(true);
+        saturationSlider.setStyle("-fx-control-inner-background: palegreen;");
+        //saturation label
+        Label saturationLabel = new Label("Saturation");
+        saturationLabel.setFont(new Font(20));
+        saturationLabel.setTextFill(Color.WHITE);
+
+        //contrast slider
+        Slider contrastSlider = new Slider(0, 1, 0.5);
+        contrastSlider.setShowTickLabels(true);
+        contrastSlider.setStyle("-fx-control-inner-background: palegreen;");
+        //contrast label
+        Label contrastLabel = new Label("Contrast");
+        contrastLabel.setFont(new Font(20));
+        contrastLabel.setTextFill(Color.WHITE);
+
+        //volume slider
+        Slider volumeSlider = new Slider(0, 100, 50);
+        volumeSlider.setShowTickLabels(true);
+        volumeSlider.setStyle("-fx-control-inner-background: palegreen;");
+        //volume label
+        Label volumeLabel = new Label("Volume");
+        volumeLabel.setFont(new Font(20));
+        volumeLabel.setTextFill(Color.WHITE);
+
+        //background color selector
+        ComboBox backGroundColor = new ComboBox();
+        backGroundColor.getItems().addAll("Red", "Blue", "Green", "Yellow", "Black", "White");
+        backGroundColor.setValue("Black");
+        //background color label
+        Label backGroundColorLabel = new Label("Background Color");
+        backGroundColorLabel.setFont(new Font(20));
+        backGroundColorLabel.setTextFill(Color.WHITE);
+        //background color confirm button
+        Button changeColorButton = new Button("Confirm Background Change");
+        changeColorButton.setId("Settings");
+        changeColorButton.setPrefSize(150, 50);
+        changeColorButton.setFont(new Font(12));
+        changeColorButton.setStyle("-fx-background-color: #17871b; -fx-text-fill: white;");
+
+        //hbox containing background color changing
+        HBox colorChange = new HBox(20, backGroundColorLabel, backGroundColor, changeColorButton);
+        colorChange.setPadding(new Insets(20, 20, 20, 20));
+        colorChange.setAlignment(Pos.CENTER);
+
+        //vbox containing all visual settings
+        VBox visualSettings = new VBox(20, backButton, brightnessLabel,
+                brightnessSlider, saturationLabel, saturationSlider, contrastLabel,
+                contrastSlider, volumeLabel, volumeSlider, colorChange);
+        visualSettings.setPadding(new Insets(20, 20, 20, 20));
+        visualSettings.setAlignment(Pos.CENTER);
+
+        //control settings label
+        Label controlSettingsLabel = new Label("Controls");
+        controlSettingsLabel.setFont(new Font(20));
+        controlSettingsLabel.setTextFill(Color.WHITE);
+
+        Button testButton = new Button("Test");
+        testButton.setId("Test");
+        testButton.setPrefSize(150, 50);
+        testButton.setFont(new Font(12));
+        testButton.setStyle("-fx-background-color: #17871b; -fx-text-fill: white;");
+
+        //vbox containing all control settings
+        VBox controlSettings = new VBox(20, controlSettingsLabel, testButton);
+        controlSettings.setPadding(new Insets(20, 20, 20, 20));
+        controlSettings.setAlignment(Pos.CENTER);
+
+        //hbox containing all settings
+        HBox settings = new HBox(50);
+        settings.setPadding(new Insets(20, 20, 20, 20));
+        settings.setAlignment(Pos.CENTER);
+        settings.getChildren().addAll(visualSettings, controlSettings);
+
+
+        backButton.setOnAction(e -> {
+            initUI();
+        });
+
+        brightnessSlider.setOnMouseReleased(e -> {
+            brightness = (brightnessSlider.getValue() - 0.5);
+            updateSettings();
+        });
+
+        saturationSlider.setOnMouseReleased(e -> {
+            saturation = (saturationSlider.getValue() - 0.5);
+            updateSettings();
+        });
+
+        contrastSlider.setOnMouseReleased(e -> {
+            contrast = (contrastSlider.getValue() - 0.5);
+            updateSettings();
+        });
+
+        volumeLabel.setOnMouseReleased(e -> {
+
+        });
+
+        changeColorButton.setOnAction(e -> {
+            backgroundColor = (String) backGroundColor.getValue();
+            borderPane.setStyle("-fx-background-color: " + backgroundColor);
+        });
+
+        borderPane = new BorderPane();
+        borderPane.setCenter(settings);
+        borderPane.setStyle("-fx-background-color: " + backgroundColor);
+        updateSettings();
 
         var scene = new Scene(borderPane, 800, 800);
         this.stage.setScene(scene);
@@ -148,7 +303,7 @@ public class TetrisView {
         this.stage.setTitle("CSC207 Tetris");
 
         borderPane = new BorderPane();
-        borderPane.setStyle("-fx-background-color: #121212;");
+        borderPane.setStyle("-fx-background-color: " + backgroundColor);
 
         //add canvas
         canvas = new Canvas(this.width, this.height);
@@ -171,9 +326,9 @@ public class TetrisView {
         addGarbageGroup.selectedToggleProperty().addListener((observable, oldVal, newVal) -> swapGarbage(newVal));
         addGarbageSpeed.setOnMouseReleased(e -> {
             //TO DO
-            double rateMultiplier = addGarbageSpeed.getValue() * 0.03;
-            this.timeline.setRate(rateMultiplier);
-            this.borderPane.requestFocus();
+            //double rateMultiplier = addGarbageSpeed.getValue() * 0.03;
+            //this.timeline.setRate(rateMultiplier);
+            //this.borderPane.requestFocus();
         });
 
         VBox botBox = new VBox(20, addGarbageSpeed);
@@ -184,6 +339,8 @@ public class TetrisView {
         rightBox.setPadding(new Insets(20, 20, 20, 20));
         botBox.setAlignment(Pos.TOP_CENTER);
 
+        // Detecting controls press
+        dropPressed.set(false);
         borderPane.setOnKeyPressed(new EventHandler<KeyEvent>() {
             @Override
             public void handle(KeyEvent k) {
@@ -282,10 +439,21 @@ public class TetrisView {
         borderPane.setCenter(canvas);
         borderPane.setRight(rightBox);
         borderPane.setBottom(botBox);
+        updateSettings();
 
         var scene = new Scene(borderPane, 800, 800);
         this.stage.setScene(scene);
         this.stage.show();
+    }
+
+    /*
+    Updates settings according to the settings variables
+    * */
+    private void updateSettings(){
+        visualSettings.setBrightness(brightness);
+        visualSettings.setSaturation(saturation);
+        visualSettings.setContrast(contrast);
+        borderPane.setEffect(visualSettings);
     }
 
     /**
@@ -295,7 +463,7 @@ public class TetrisView {
         this.stage.setTitle("CSC207 Tetris");
 
         borderPane = new BorderPane();
-        borderPane.setStyle("-fx-background-color: #121212;");
+        borderPane.setStyle("-fx-background-color: " + backgroundColor);
 
         //add canvas
         canvas = new Canvas(this.width, this.height);
@@ -319,6 +487,8 @@ public class TetrisView {
             this.borderPane.requestFocus();
         });
 
+        // Detecting controls press
+        dropPressed.set(false);
         borderPane.setOnKeyPressed(new EventHandler<KeyEvent>() {
             @Override
             public void handle(KeyEvent k) {
@@ -416,6 +586,7 @@ public class TetrisView {
 
         borderPane.setTop(controls);
         borderPane.setCenter(canvas);
+        updateSettings();
 
         var scene = new Scene(borderPane, 800, 800);
         this.stage.setScene(scene);
@@ -494,7 +665,7 @@ public class TetrisView {
     /**
      * Create the view to connect to a game lobby or start a game lobby
      */
-    private void createConnectView(){
+    private void createConnectView() {
         connectView = new ConnectView(this, model);
     }
 
