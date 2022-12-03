@@ -14,10 +14,7 @@ import model.TetrisModel;
 import multiplayer.Client;
 import multiplayer.Server;
 import java.io.*;
-import java.net.InetAddress;
-import java.net.NetworkInterface;
-import java.net.Socket;
-import java.net.ServerSocket;
+import java.net.*;
 
 /** 
  * Connect View
@@ -42,7 +39,7 @@ public class ConnectView {
 
      /**
          * Constructor
-         * 
+         *
          * @param tetrisView master view
          */
     public ConnectView(TetrisView tetrisView, TetrisModel tetrisModel) {
@@ -90,7 +87,7 @@ public class ConnectView {
                         if (portAvailable(Integer.parseInt(portTextField.getText()))) {
                             initializeServer();
                         }else {
-                            addressErrorLabel.setText("The port is already in use");
+                            addressErrorLabel.setText("This port is already in use");
                         }
                     }
                 }
@@ -153,6 +150,7 @@ public class ConnectView {
             client = new Client(this.tetrisView, socket);
             new Thread(client).start();
             connectButton.setVisible(false);
+            addressErrorLabel.setText("Connected to lobby. Wait for host to start.");
         }catch (IOException e) {
             return false;
         }
@@ -194,11 +192,12 @@ public class ConnectView {
             ss.setReuseAddress(true);
             return true;
         } catch (IOException e) {
+            //
         } finally {
             if (ss != null) {
                 try {
                     ss.close();
-                } catch (IOException e) {
+                }catch (IOException e) {
                     /* should not be thrown */
                 }
             }
