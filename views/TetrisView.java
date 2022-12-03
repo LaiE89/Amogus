@@ -168,7 +168,8 @@ public class TetrisView {
             this.createChatView();
             this.borderPane.requestFocus();
         });
-
+        
+        // Controls for moving block
         borderPane.setOnKeyPressed(new EventHandler<KeyEvent>() {
             @Override
             public void handle(KeyEvent k) {
@@ -199,6 +200,7 @@ public class TetrisView {
             }
         });
 
+        // Timer for managing the block movement speed
         timer = new AnimationTimer() {
             @Override
             public void handle(long now) {
@@ -233,6 +235,7 @@ public class TetrisView {
             }
         };
 
+        // Checking when the player releases their finger from a button
         borderPane.setOnKeyReleased(new EventHandler<KeyEvent>() {
             @Override
             public void handle(KeyEvent k) {
@@ -252,6 +255,7 @@ public class TetrisView {
             }
         });
 
+        // Checking if the player pressed any button
         anyPressed.addListener((obs, wasPressed, isNowPressed) -> {
             if (isNowPressed) {
                 timer.start();
@@ -306,7 +310,7 @@ public class TetrisView {
         final int dy = Math.round(dY()-2);
         final int bWidth = this.model.getBoard().getWidth();
 
-        // Painting the area that the current piece is going to land
+        // Painting the placement indicator for the current piece
         int floorYHeight = model.floorY;
         TetrisPoint[] currentPieceBody = model.currentPiece.getBody();
         for (int i = 0; i < currentPieceBody.length; i++) {

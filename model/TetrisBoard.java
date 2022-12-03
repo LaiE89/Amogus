@@ -13,7 +13,7 @@ import java.util.*;
 public class TetrisBoard implements Serializable{
     private int width; //board height and width
     private int height;
-    protected int[][] tetrisGrid; //board grid
+    protected int[][] tetrisGrid; //board grid. Every cell will take an int value which represents the id of the piece that the cell belongs to.
     boolean committed; //indicates if the board is in a 'committed' state, meaning can't undo!
 
     //In your implementation, you'll want to keep counts of filled grid positions in each column.
@@ -131,6 +131,15 @@ public class TetrisBoard implements Serializable{
         return false;
     }
 
+    /**
+     * Returns the color of the block at the specified position if the given
+     * block is filled in the board. Otherwise, returns a null value.
+     *
+     * @param x grid position, x
+     * @param y grid position, y
+     *
+     * @return a color if the given block at x,y is filled, else returns null
+     */
     public Color getGridColor(int x, int y) {
         switch (tetrisGrid[x][y]) {
             case 1:

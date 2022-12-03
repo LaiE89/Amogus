@@ -74,15 +74,18 @@ public class TetrisPiece implements Serializable {
         }
         this.height = maxHeight;
 
+        // Sets color to white and id to 1 by default.
+        // Garbage pieces will be white and have an id of 1.
         if (this.color == null) {
-            this.color = Color.WHITE; // Garbage piece
+            this.color = Color.WHITE;
             this.id = 1;
         }
     }
 
     /**
      * Alternate constructor for a piece, takes a String with the x,y body points
-     * all separated by spaces, such as "0 0  1 0  2 0  1 1".
+     * all separated by spaces, such as "0 0  1 0  2 0  1 1". Depending on the body,
+     * assigns a color to the new constructed piece.
      */
     public TetrisPiece(String points) {
         this(parsePoints(points));
