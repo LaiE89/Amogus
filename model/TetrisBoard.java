@@ -304,6 +304,8 @@ public class TetrisBoard implements Serializable{
     /**
      *Takes in a number of rows and adds that many rows to the bottom of the board
      * returns true if the board is completely filled, false otherwise
+     * Precondition: rows >= 0
+     * Postcondition: Adds garbage rows from 0th row to the n-1th row
      * **/
     public boolean addGarbage(int rows){
         int highest = getMaxHeight();
@@ -340,7 +342,7 @@ public class TetrisBoard implements Serializable{
             }
     }
     /**
-     * Takes in a number of rows
+     * Takes in number of rows n and fills board up to nth row
      * Precondition: None
      * Postcondition: Fills the board from the bottom up to the nth row
      * **/
@@ -356,6 +358,9 @@ public class TetrisBoard implements Serializable{
 
     /**
      *Given n, puts a hole from the 0th to the n-1th row
+     * Precondition: n > 0
+     * Postcondition: Randomly changes one boolean value on each row of tetrisGrid starting from the 1st row
+     * up to nth row
      */
     public void randomHole(int n){
         int col = 0;
