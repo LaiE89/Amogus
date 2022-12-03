@@ -285,6 +285,9 @@ public class TetrisModel implements Serializable {
         }
         gameOn = false;
     }
+    public int getScore(){
+        return this.score;
+    }
 }
 
 
