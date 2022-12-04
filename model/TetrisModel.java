@@ -2,14 +2,7 @@ package model;
 
 import multiplayer.Client;
 import views.ConnectView;
-import views.GameView;
-import views.MultiplayerView;
-import views.TetrisView;
-
 import java.io.*;
-import java.net.ServerSocket;
-import java.net.Socket;
-import java.util.Arrays;
 import java.util.Random;
 
 /** Represents a Tetris Model for Tetris.  
@@ -48,7 +41,8 @@ public class TetrisModel implements Serializable {
         LEFT,
         RIGHT,
         DROP,
-        DOWN
+        DOWN,
+        GARBAGE
     }
 
     /**
@@ -123,7 +117,8 @@ public class TetrisModel implements Serializable {
                     newY = currentY;
                 }
                 break;
-
+            case GARBAGE:
+                break;
             default: //doh!
                 throw new RuntimeException("Bad movement!");
         }
@@ -150,7 +145,6 @@ public class TetrisModel implements Serializable {
         if (result > TetrisBoard.ADD_ROW_FILLED) {
             stopGame(); //oops, we lost.
         }
-
     }
 
     /**
@@ -227,6 +221,13 @@ public class TetrisModel implements Serializable {
         if (currentPiece != null) {
             board.undo();	// remove the piece from its old position
         }
+        boolean garbageOverflow = false;
+        if (verb == MoveType.GARBAGE) {
+            System.out.println("Placing garbage");
+            garbageOverflow = this.board.addGarbage(this.client.receiveGarbageLines);
+            this.client.receiveGarbageLines = 0;
+            this.board.commit();
+        }
 
         computeNewPosition(verb);
 
@@ -241,7 +242,7 @@ public class TetrisModel implements Serializable {
         }
 
         // If move is drop, instantly place piece and add new piece
-        if ((canPlace && failed && verb==MoveType.DOWN) || verb==MoveType.DROP) {    // if it's out of bounds due to falling
+        if ((canPlace && failed && verb == MoveType.DOWN) || verb == MoveType.DROP) {    // if it's out of bounds due to falling
             TetrisApp.view.gameView.timeline.stop();
             int cleared = board.clearRows();
             if (cleared > 0) {
@@ -249,15 +250,15 @@ public class TetrisModel implements Serializable {
                     case 1:
                     case 2:
                         // Send 1 line of garbage
-                        this.client.sendPacket(this.client.numConnections, true,true, 1);
+                        this.client.sendPacket(this.client.numConnections, this.client.isGameStarted, false, 1);
                         break;
                     case 3:
                         // Send 2 lines of garbage
-                        this.client.sendPacket(this.client.numConnections, true,true, 2);
+                        this.client.sendPacket(this.client.numConnections, this.client.isGameStarted,false, 2);
                         break;
                     case 4:
                         // Send 4 lines of garbage
-                        this.client.sendPacket(this.client.numConnections, true,true, 4);
+                        this.client.sendPacket(this.client.numConnections, this.client.isGameStarted,false, 4);
                         break;
                     default:
                 }
@@ -267,6 +268,9 @@ public class TetrisModel implements Serializable {
             }else {
                 addNewPiece();
             }
+        }
+        if (garbageOverflow) {
+            stopGame();
         }
     }
 
@@ -287,8 +291,6 @@ public class TetrisModel implements Serializable {
             TetrisApp.view.initUI();
             TetrisApp.view.gameView.timer.stop();
             TetrisApp.view.gameView.timeline.stop();
-            //TetrisApp.view.timer.stop();
-            //TetrisApp.view.timeline.stop();
         }else { // If the game is a multiplayer game, tell the server that this player lost
             this.client.sendPacket(this.client.numConnections, true,true, 0);
             this.isMultiplayer = false;

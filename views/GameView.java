@@ -32,7 +32,7 @@ public class GameView {
     BooleanBinding anyPressed = downPressed.or(rightPressed).or(leftPressed).or(rotatePressed);
 
     // Reference to TetrisView variables
-    protected BorderPane borderPane;
+    public BorderPane borderPane;
     protected Stage stage;
     protected Canvas canvas;
     protected GraphicsContext gc;
@@ -48,7 +48,6 @@ public class GameView {
 
         // Detecting controls press
         dropPressed.set(false);
-
         borderPane.setOnKeyPressed(new EventHandler<KeyEvent>() {
             @Override
             public void handle(KeyEvent k) {
@@ -56,6 +55,7 @@ public class GameView {
                 if (k.getCode() == KeyCode.SPACE) {
                     rotatePressed.set(true);
                     model.canPlace = false;
+                    //System.out.println("Rotated Pressed? " + rotatePressed.get() + ", Timer Started? " + timer.toString());
                 }
                 if (k.getCode() == KeyCode.S) {
                     downPressed.set(true);

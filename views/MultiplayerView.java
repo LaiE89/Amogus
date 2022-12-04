@@ -11,9 +11,9 @@ public class MultiplayerView extends GameView{
 
     public MultiplayerView() {
         super();
-
         Button chatButton = new Button("Chat");
         chatButton.setId("Chat");
+        chatButton.setFocusTraversable(false);
         chatButton.setPrefSize(150, 50);
         chatButton.setFont(new Font(12));
         chatButton.setStyle("-fx-background-color: #17871b; -fx-text-fill: white;");

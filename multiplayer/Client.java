@@ -1,6 +1,7 @@
 package multiplayer;
 
 import javafx.application.Platform;
+import model.TetrisApp;
 import model.TetrisModel;
 import views.ConnectView;
 import views.MultiplayerView;
@@ -46,15 +47,22 @@ public class Client extends Thread{
 
     public void run() {
 
+        Thread updateBoard = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                while (!socket.isClosed()) {
+                    if (receiveGarbageLines > 0 && model.currentY >= model.HEIGHT) {
+                        model.modelTick(TetrisModel.MoveType.GARBAGE);
+                        TetrisApp.view.paintBoard();
+                    }
+                }
+            }
+        });
+        updateBoard.start();
+
         // Always receiving packets of data from the server
         while (!this.socket.isClosed()) {
             getPacket();
-            if (receiveGarbageLines > 0 && model.currentY >= model.HEIGHT) {
-                System.out.println("Placing garbage");
-                this.model.getBoard().addGarbage(receiveGarbageLines);
-                this.tetrisView.paintBoard();
-                receiveGarbageLines = 0;
-            }
         }
 
         // "Deleting" this instance of client
@@ -85,7 +93,10 @@ public class Client extends Thread{
             //this.isGameStarted = dis.readBoolean();
             Packet value = (Packet) dis.readObject();
             this.numConnections = value.getNumConnections();
-            this.receiveGarbageLines += value.getSendGarbageLines();
+            if (value.getSendGarbageLines() > 0) {
+                this.receiveGarbageLines += value.getSendGarbageLines();
+                System.out.println(this.socket.getLocalPort() + " got " + value.getSendGarbageLines() + " garbage lines. Current garbage lines: " + this.receiveGarbageLines);
+            }
             Platform.runLater(new Runnable() {
                 @Override public void run() {
                     connectView.startButton.setText("Number of players: " + numConnections);
@@ -99,7 +110,7 @@ public class Client extends Thread{
                         tetrisView.createMultiplayerView();
                         model.newGame();
                         connectView.dialog.close();
-                        tetrisView.borderPane.requestFocus();
+                        tetrisView.gameView.borderPane.requestFocus();
                     }
                 });
             }

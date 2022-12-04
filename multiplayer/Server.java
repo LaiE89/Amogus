@@ -16,9 +16,9 @@ public class Server extends Thread{
     public ServerSocket serverSocket;
     public HashMap<Socket, ObjectInputStream> serverDis = new HashMap<>(); // Receives data from all clients
     public HashMap<Socket, ObjectOutputStream> serverDos = new HashMap<>(); // Sends data to all clients
-    List<Socket> clientSockets = new ArrayList<>();
+    HashMap<Socket, Boolean> clientSockets = new HashMap<Socket, Boolean>();
     private int clientReadTime = 1000;
-    public Object lock = new Object(); // A monitor lock. Ensures synchronization when accessing <clientSockets>
+    public final Object lock = new Object(); // A monitor lock. Ensures synchronization when accessing <clientSockets>
     public int numConnections = 0;
     public boolean isGameStarted = false;
     public int numGameOvers = 0;
@@ -91,10 +91,10 @@ public class Server extends Thread{
             serverDos.put(clientSocket, new ObjectOutputStream(clientSocket.getOutputStream()));
             serverDis.put(clientSocket, new ObjectInputStream(clientSocket.getInputStream()));
             clientSocket.setSoTimeout(clientReadTime);
-            clientSockets.add(clientSocket);
+            clientSockets.put(clientSocket, true);
             numConnections = clientSockets.size();
             sendPacket(numConnections, isGameStarted, false, 0);
-            System.out.println("CLIENT WITH LOCAL ADDRESS: " + clientSocket.getRemoteSocketAddress() + ", HAS REQUESTED TO JOIN. THE CURRENT SERVER LIST OF SIZE " + numConnections + " IS: " + clientSockets.stream().map(Object::toString).collect(Collectors.joining(", ")));
+            System.out.println("CLIENT WITH LOCAL ADDRESS: " + clientSocket.getRemoteSocketAddress() + ", HAS REQUESTED TO JOIN. THE CURRENT SERVER LIST SIZE: " + numConnections);
         }catch (IOException e) {
             System.out.println(e.getMessage());
         }
@@ -124,7 +124,7 @@ public class Server extends Thread{
      * @param isGameOver true if the current client has lost (the current client's board is full)
      */
     public void sendPacket(int numConnections, boolean isGameStarted, boolean isGameOver, int sendGarbageLines) {
-        for (Socket socket : clientSockets) {
+        for (Socket socket : clientSockets.keySet()) {
             try {
                 Packet packet = new Packet(numConnections, isGameStarted, isGameOver, sendGarbageLines);
                 serverDos.get(socket).writeObject(packet);
@@ -136,19 +136,26 @@ public class Server extends Thread{
     }
 
     public void sendPacketToRandomClient(Socket sender, int numConnections, boolean isGameStarted, boolean isGameOver, int sendGarbageLines) {
-        List<Socket> clientsCopy;
+        HashMap<Socket, Boolean> clientsCopy;
         synchronized (lock) {
-            clientsCopy = new ArrayList<>(clientSockets);
+            clientsCopy = new HashMap<>(clientSockets);
         }
         clientsCopy.remove(sender);
-        int index = (int)(Math.random() * clientsCopy.size());
-        try {
-            System.out.println("Sending " + sendGarbageLines + " lines of garbage to " + clientsCopy.get(index));
-            Packet packet = new Packet(numConnections, isGameStarted, isGameOver, sendGarbageLines);
-            serverDos.get(clientsCopy.get(index)).writeObject(packet);
-            serverDos.get(clientsCopy.get(index)).flush();
-        }catch (IOException e) {
-            System.out.println(e.getMessage());
+        for (Socket socket : clientsCopy.keySet()) {
+            if (!clientsCopy.get(socket)) {
+                clientsCopy.remove(socket);
+            }
+        }
+        if (clientsCopy.size() > 0) {
+            int index = (int) (Math.random() * clientsCopy.size());
+            try {
+                System.out.println("Sending " + sendGarbageLines + " lines of garbage to " + clientsCopy.keySet().toArray()[index]);
+                Packet packet = new Packet(numConnections, isGameStarted, isGameOver, sendGarbageLines);
+                serverDos.get(clientsCopy.keySet().toArray()[index]).writeObject(packet);
+                serverDos.get(clientsCopy.keySet().toArray()[index]).flush();
+            } catch (IOException e) {
+                System.out.println("Failed to send packet to random client: " + e.getMessage());
+            }
         }
     }
 
@@ -159,16 +166,18 @@ public class Server extends Thread{
     public void receivePacket() {
         List<Socket> clientsCopy;
         synchronized (lock) {
-            clientsCopy = new ArrayList<>(clientSockets);
+            clientsCopy = new ArrayList<>(clientSockets.keySet());
         }
         for (Socket socket : clientsCopy) {
             try {
-                System.out.println("Receiving packet from: " + socket.getPort());
+                //System.out.println("Receiving packet from: " + socket.getPort());
                 Packet value = (Packet) serverDis.get(socket).readObject();
                 boolean isGameOver = value.getIsGameOver();
                 int sendGarbageLines = value.getSendGarbageLines();
                 if (isGameOver) {
+                    System.out.println(socket.getPort() + " has lost.");
                     numGameOvers += 1; // numGameOvers is only accessed here and this method is called once in only one thread so synchronization is not needed
+                    clientSockets.put(socket, false);
                 }
                 if (sendGarbageLines > 0) {
                     sendPacketToRandomClient(socket, numConnections, isGameStarted, false, sendGarbageLines);
@@ -191,7 +200,7 @@ public class Server extends Thread{
      * @param socket the client socket that will be removed from the server
      */
     public void removeClient(Socket socket) throws IOException {
-        if (clientSockets.contains(socket)) {
+        if (clientSockets.containsKey(socket)) {
             clientSockets.remove(socket);
             serverDis.remove(socket);
             serverDos.remove(socket);
@@ -222,7 +231,7 @@ public class Server extends Thread{
     public void removeAllClients() {
         List<Socket> clientsCopy;
         synchronized (lock) {
-            clientsCopy = new ArrayList<>(clientSockets);
+            clientsCopy = new ArrayList<>(clientSockets.keySet());
         }
         for (Socket socket : clientsCopy) {
             try {
@@ -239,7 +248,7 @@ public class Server extends Thread{
     public void clearAllSentPackets() {
         List<Socket> clientsCopy;
         synchronized (lock) {
-            clientsCopy = new ArrayList<>(clientSockets);
+            clientsCopy = new ArrayList<>(clientSockets.keySet());
         }
         for (Socket socket : clientsCopy) {
             try {

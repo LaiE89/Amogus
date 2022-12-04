@@ -361,25 +361,38 @@ public class TetrisBoard implements Serializable{
         if(highest + rows > TetrisModel.HEIGHT){ //if the # of rows added + max height exceeds board height, then board is filled
             return true;
         }*/
-        moveUp(rows);
-        fillGrid(rows);
-        randomHole(rows);
-        makeHeightAndWidthArrays();
-        return false;
+
+        if (this.committed) {
+            boolean isLost = moveUp(rows);
+            fillGrid(rows);
+            randomHole(rows);
+            makeHeightAndWidthArrays();
+            return isLost;
+        }else {
+            throw new RuntimeException("Board must be committed before adding garbage");
+        }
     }
+
     /**
      * Takes in a number of rows and the height of the highest column
      * Precondition: rows + getMaxHeight() < boardHeight
      * Postcondition: shifts the entire board based on the number of rows
     * **/
-    public void moveUp(int rows){
-        //int highest = getMaxHeight()-1;
-        int highest = TetrisModel.HEIGHT - 1;
+    public boolean moveUp(int rows){
+        boolean result = false;
+        int highest = TetrisModel.HEIGHT;
         for(int i = highest; i >= 0; i--){
             for(int j = 0; j < width; j++){
-                if (i + rows < highest) tetrisGrid[j][i+rows] = tetrisGrid[j][i];
+                if (i + rows < highest) {
+                    tetrisGrid[j][i + rows] = tetrisGrid[j][i];
+                }else {
+                    if (tetrisGrid[j][i] > 0) {
+                        result = true;
+                    }
+                }
             }
         }
+        return result;
     }
 
     /**
@@ -388,12 +401,10 @@ public class TetrisBoard implements Serializable{
      * Postcondition: Fills the board from the bottom up to the nth row
      * **/
     public void fillGrid(int n){
-        int y = 0;
-        for(int i = 0; i < n; i++){
+        for(int y = 0; y < n; y++){
             for(int x = 0; x < width; x++){
                 tetrisGrid[x][y] = 1;
             }
-            y++;
         }
     }
 
@@ -405,20 +416,10 @@ public class TetrisBoard implements Serializable{
      */
     public void randomHole(int n){
         int col = 0;
-        int prev = -1;
+        //int prev = -1;
         for(int i = n-1; i >= 0; i--){
             col = (int)(Math.random()*width);
             tetrisGrid[col][i] = 0;
-            if(i == n-1 && getColumnHeight(col) == n){
-                colCounts[col] -= 1;
-                prev = col;
-            }
-            else if(prev == col){
-                colCounts[col] -= 1;
-            }
-            else{
-                prev = -1;
-            }
         }
     }
 
