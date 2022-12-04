@@ -1,12 +1,11 @@
 package views;
 
+import javafx.event.Event;
+import javafx.event.EventType;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.Label;
-import javafx.scene.control.Slider;
+import javafx.scene.control.*;
 import javafx.scene.effect.ColorAdjust;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
@@ -123,14 +122,48 @@ public class SettingsView {
         controlSettingsLabel.setFont(new Font(20));
         controlSettingsLabel.setTextFill(Color.WHITE);
 
-        Button testButton = new Button("Test");
-        testButton.setId("Test");
-        testButton.setPrefSize(150, 50);
-        testButton.setFont(new Font(12));
-        testButton.setStyle("-fx-background-color: #17871b; -fx-text-fill: white;");
+        Label dropLabel = new Label("DROP");
+        dropLabel.setFont(new Font(20));
+        dropLabel.setTextFill(Color.WHITE);
+
+        Button dropControl = new Button("w");
+        HBox dropControlBox = new HBox(20, dropLabel, dropControl);
+        dropControlBox.setAlignment(Pos.CENTER_RIGHT);
+
+        Label rotateLabel = new Label("ROTATE");
+        rotateLabel.setFont(new Font(20));
+        rotateLabel.setTextFill(Color.WHITE);
+
+        Button rotateControl = new Button("space");
+        HBox rotateControlBox = new HBox(20, rotateLabel, rotateControl);
+        rotateControlBox.setAlignment(Pos.CENTER_RIGHT);
+
+        Label leftLabel = new Label("LEFT");
+        leftLabel.setFont(new Font(20));
+        leftLabel.setTextFill(Color.WHITE);
+
+        Button leftControl = new Button("a");
+        HBox leftControlBox = new HBox(20, leftLabel, leftControl);
+        leftControlBox.setAlignment(Pos.CENTER_RIGHT);
+
+        Label rightLabel = new Label("RIGHT");
+        rightLabel.setFont(new Font(20));
+        rightLabel.setTextFill(Color.WHITE);
+
+        Button rightControl = new Button("d");
+        HBox rightControlBox = new HBox(20, rightLabel, rightControl);
+        rightControlBox.setAlignment(Pos.CENTER_RIGHT);
+
+        Label downLabel = new Label("DOWN");
+        downLabel.setFont(new Font(20));
+        downLabel.setTextFill(Color.WHITE);
+
+        Button downControl = new Button("s");
+        HBox downControlBox = new HBox(20, downLabel, downControl);
+        downControlBox.setAlignment(Pos.CENTER_RIGHT);
 
         //vbox containing all control settings
-        VBox controlSettings = new VBox(20, controlSettingsLabel, testButton);
+        VBox controlSettings = new VBox(20, controlSettingsLabel, dropControlBox,rotateControlBox, leftControlBox, rightControlBox, downControlBox);
         controlSettings.setPadding(new Insets(20, 20, 20, 20));
         controlSettings.setAlignment(Pos.CENTER);
 
