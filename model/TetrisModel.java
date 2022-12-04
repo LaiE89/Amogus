@@ -8,7 +8,7 @@ import java.util.Random;
 /** Represents a Tetris Model for Tetris.  
  * Based on the Tetris assignment in the Nifty Assignments Database, authored by Nick Parlante
  */
-public class TetrisModel implements Serializable {
+public class TetrisModel {
 
     public static final int WIDTH = 10; //size of the board in blocks
     public static final int HEIGHT = 20; //height of the board in blocks
@@ -34,7 +34,7 @@ public class TetrisModel implements Serializable {
 
     // Multiplayer variables
     boolean isMultiplayer = false;
-    Client client;
+    public Client client;
 
     public enum MoveType {
         ROTATE,
@@ -59,13 +59,6 @@ public class TetrisModel implements Serializable {
      * Start new game
      */
     public void startGame() { //start game
-        random = new Random();
-        addNewPiece();
-        gameOn = true;
-        score = 0;
-        count = 0;
-        TetrisApp.view.paintBoard();
-
         // Check if current game is multiplayer
         if (ConnectView.client != null && ConnectView.client.isGameStarted) {
             System.out.println("Game is multiplayer.");
@@ -74,6 +67,13 @@ public class TetrisModel implements Serializable {
         }else {
             this.isMultiplayer = false;
         }
+
+        random = new Random();
+        addNewPiece();
+        gameOn = true;
+        score = 0;
+        count = 0;
+        TetrisApp.view.paintBoard();
     }
 
     /**
@@ -145,6 +145,7 @@ public class TetrisModel implements Serializable {
         if (result > TetrisBoard.ADD_ROW_FILLED) {
             stopGame(); //oops, we lost.
         }
+        this.client.sendPacket(this.client.numConnections, true,false, 0);
     }
 
     /**

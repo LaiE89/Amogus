@@ -2,15 +2,29 @@ package views;
 
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
+import model.TetrisApp;
+import model.TetrisModel;
+
+import java.util.HashMap;
 
 public class MultiplayerView extends GameView{
-
+    VBox opponentsBoardsLeft;
+    VBox opponentsBoardsRight;
     public MultiplayerView() {
         super();
+        TetrisApp.view.opBoard1 = new Group();
+        TetrisApp.view.opBoard2 = new Group();
+        TetrisApp.view.opBoard3 = new Group();
+        TetrisApp.view.opBoard4 = new Group();
+
+        opponentsBoardsLeft = new VBox(20, TetrisApp.view.opBoard1, TetrisApp.view.opBoard3);
+        opponentsBoardsRight = new VBox(20, TetrisApp.view.opBoard2, TetrisApp.view.opBoard4);
         Button chatButton = new Button("Chat");
         chatButton.setId("Chat");
         chatButton.setFocusTraversable(false);
@@ -30,6 +44,8 @@ public class MultiplayerView extends GameView{
 
         borderPane.setTop(controls);
         borderPane.setCenter(canvas);
+        borderPane.setLeft(opponentsBoardsLeft);
+        borderPane.setRight(opponentsBoardsRight);
         SettingsView.updateSettings(borderPane);
 
         var scene = new Scene(borderPane, 800, 800);

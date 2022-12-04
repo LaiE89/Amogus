@@ -1,7 +1,9 @@
 package multiplayer;
 
 import javafx.application.Platform;
+import javafx.util.Pair;
 import model.TetrisApp;
+import model.TetrisBoard;
 import model.TetrisModel;
 import views.ConnectView;
 import views.MultiplayerView;
@@ -10,9 +12,12 @@ import views.TetrisView;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.IOException;
+import java.io.Serializable;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.HashMap;
 
-public class Client extends Thread{
+public class Client extends Thread {
     private TetrisView tetrisView;
     private ConnectView connectView;
     private TetrisModel model;
@@ -24,8 +29,8 @@ public class Client extends Thread{
     public int localPort;
     public int numConnections = 0;
     public boolean isGameStarted = false;
-    public int sendGarbageLines = 0;
     public int receiveGarbageLines = 0;
+    public HashMap<Integer, Pair<Integer, TetrisBoard>> opponentBoards = new HashMap<>();
 
     /**
      * Constructor
@@ -33,7 +38,7 @@ public class Client extends Thread{
      * @param tetrisView current client's tetrisView
      * @param socket current client's socket
      */
-    public Client(TetrisView tetrisView, Socket socket) throws IOException{
+    public Client(TetrisView tetrisView, Socket socket) throws IOException {
         this.tetrisView = tetrisView;
         this.connectView = tetrisView.connectView;
         this.model = tetrisView.model;
@@ -42,6 +47,11 @@ public class Client extends Thread{
         this.dis = new ObjectInputStream(this.socket.getInputStream());
         this.dos = new ObjectOutputStream(this.socket.getOutputStream());
         this.localPort = this.socket.getLocalPort();
+
+        opponentBoards.put(1, null);
+        opponentBoards.put(2, null);
+        opponentBoards.put(3, null);
+        opponentBoards.put(4, null);
         System.out.println("CREATED NEW CLIENT, CLIENT'S CONNECTED TO: " + this.socket.getInetAddress() + ": " + this.socket.getPort() + ", CLIENT'S LOCAL DETAILS: " + this.socket.getLocalSocketAddress());
     }
 
@@ -73,7 +83,6 @@ public class Client extends Thread{
      * Closes this client's socket.
      */
     public void closeClientConnection() {
-        //sendPacket(numConnections, isGameStarted, localPort);
         try {
             System.out.println(this.socket.getLocalPort() + " has disconnected.");
             this.socket.close();
@@ -114,6 +123,15 @@ public class Client extends Thread{
                     }
                 });
             }
+            if (value.getSenderBoard() != null && value.getSender() != this.socket.getLocalPort() && !value.getIsGameOver()) {
+                for (int pos : this.opponentBoards.keySet()) {
+                    if (this.opponentBoards.get(pos) == null || this.opponentBoards.get(pos).getKey() == value.getSender()) {
+                        this.opponentBoards.put(pos, new Pair<>(value.getSender(), value.getSenderBoard()));
+                        TetrisApp.view.paintOpponentBoards(pos, value.getSenderBoard());
+                        break;
+                    }
+                }
+            }
         } catch (IOException e1) {
             try {
                 System.out.println("SERVER GOT SHUTDOWN: " + e1);
@@ -152,7 +170,8 @@ public class Client extends Thread{
      */
     public void sendPacket(int numConnections, boolean isGameStarted, boolean isGameOver, int sendGarbageLines) {
         try {
-            Packet packet = new Packet(numConnections, isGameStarted, isGameOver, sendGarbageLines);
+            Packet packet = new Packet(this.socket.getLocalPort(), numConnections, isGameStarted, isGameOver, sendGarbageLines, this.model.getBoard());
+            dos.reset();
             dos.writeObject(packet);
             dos.flush();
         }catch (IOException e) {

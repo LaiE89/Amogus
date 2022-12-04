@@ -10,7 +10,7 @@ import java.util.*;
 /** Represents a Board class for Tetris.  
  * Based on the Tetris assignment in the Nifty Assignments Database, authored by Nick Parlante
  */
-public class TetrisBoard implements Serializable{
+public class TetrisBoard implements Serializable {
     private int width; //board height and width
     private int height;
     protected int[][] tetrisGrid; //board grid. Every cell will take an int value which represents the id of the piece that the cell belongs to.
@@ -501,8 +501,6 @@ public class TetrisBoard implements Serializable{
         for (int x=0; x<width+2; x++) buff.append('-');
         return(buff.toString());
     }
-
-
 }
 
 

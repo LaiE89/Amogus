@@ -5,8 +5,15 @@ import javafx.animation.AnimationTimer;
 import javafx.beans.binding.BooleanBinding;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
+import javafx.scene.Group;
+import javafx.scene.Node;
 import javafx.scene.effect.ColorAdjust;
+import javafx.scene.shape.Line;
+import javafx.scene.shape.Rectangle;
+import javafx.scene.shape.Shape;
+import javafx.util.Pair;
 import model.TetrisApp;
+import model.TetrisBoard;
 import model.TetrisModel;
 
 import javafx.animation.KeyFrame;
@@ -29,7 +36,8 @@ import javafx.stage.Stage;
 import javafx.util.Duration;
 import model.TetrisPoint;
 
-import java.util.ArrayList;
+import java.net.Socket;
+import java.util.*;
 
 
 /**
@@ -46,6 +54,10 @@ public class TetrisView {
     Button singleplayerButton, chatButton, multiplayerButton, settingsButton; //buttons for functions
     Canvas canvas;
     GraphicsContext gc; //the graphics context will be linked to the canvas
+    protected Group opBoard1;
+    protected Group opBoard2;
+    protected Group opBoard3;
+    protected Group opBoard4;
 
     // Board Variables
     int pieceWidth = 20; //width of block on display
@@ -209,6 +221,61 @@ public class TetrisView {
                 }
             }
         }
+    }
+
+    public void paintOpponentBoards(int boardPos, TetrisBoard opponentBoard) {
+        switch (boardPos) {
+            case 1:
+                //opBoard1 = drawOpponentBoard(0, 0, opponentBoard);
+            case 2:
+                //opBoard2 = drawOpponentBoard(0, 0, opponentBoard);
+            case 3:
+                //opBoard3 = drawOpponentBoard(0, 0, opponentBoard);
+            case 4:
+                //opBoard4 = drawOpponentBoard(0, 0, opponentBoard);
+        }
+    }
+
+    private Group drawOpponentBoard(int posX, int posY, TetrisBoard opBoard) {
+        Group result = new Group();
+        int ratio = 4; // ratio from regular board size to opponent board size
+        double oppHeight = (this.model.getHeight() - 1) / ratio;
+        double oppWidth = (this.model.getWidth() - 1) / ratio;
+        double opHeight = this.model.getHeight() / ratio;
+        double opWidth = this.model.getWidth() / ratio;
+        Rectangle board = new Rectangle(posX, posY, oppWidth, oppHeight);
+        board.setFill(Color.BLACK);
+        board.setStroke(Color.BLACK);
+        result.getChildren().add(board);
+
+        // Draw the line separating the top area on the screen
+        int spacerY = yPixel(opBoard.getHeight() - this.model.BUFFERZONE - 1);
+        Line line = new Line(posX, spacerY, oppWidth, spacerY);
+        line.setStroke(Color.GRAY);
+        result.getChildren().add(line);
+
+        // Factor a few things out to help the optimizer
+        final float dX = (float)((opWidth-2) / opWidth);
+        final float dY = (float)((opHeight-2) / opHeight);
+        final int dx = Math.round(dX - 2);
+        final int dy = Math.round(dY - 2);
+        final int bWidth = (opBoard.getWidth());
+
+        int x, y;
+        // Loop through and draw all the blocks; sizes of blocks are calibrated relative to screen size
+        for (x = 0; x < bWidth; x++) {
+            int left = xPixel(x);    // the left pixel
+            // draw from 0 up to the col height
+            final int yHeight = opBoard.getColumnHeight(x);
+            for (y = 0; y < yHeight; y++) {
+                if (opBoard.getGrid(x, y)) {
+                    Rectangle piece = new Rectangle(left + 1, yPixel(y), dx, dy);
+                    piece.setFill(opBoard.getGridColor(x, y));
+                    result.getChildren().add(piece);
+                }
+            }
+        }
+        return result;
     }
 
     /**
