@@ -14,6 +14,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.stage.Stage;
 import model.TetrisApp;
+import javafx.scene.input.KeyCode;
 
 public class SettingsView {
 
@@ -32,6 +33,11 @@ public class SettingsView {
 
     // Reference to TetrisView variables
     private BorderPane borderPane;
+    private Button rotateControl;
+    private Button leftControl;
+    private Button rightControl;
+    private Button downControl;
+    private Button dropControl;
 
     /**
      * Constructor
@@ -47,11 +53,11 @@ public class SettingsView {
         backButton.setPrefSize(150, 50);
         backButton.setFont(new Font(12));
         backButton.setStyle("-fx-background-color: #17871b; -fx-text-fill: white;");
+        backButton.setFocusTraversable(false);
 
         // Brightness slider
         brightnessSlider = new Slider(0, 1, 0.5);
         brightnessSlider.setShowTickLabels(true);
-        brightnessSlider.setValue(brightness + 0.5);
         brightnessSlider.setStyle("-fx-control-inner-background: palegreen;");
 
         // Brightness label
@@ -62,7 +68,6 @@ public class SettingsView {
         // Saturation slider
         saturationSlider = new Slider(0, 1, 0.5);
         saturationSlider.setShowTickLabels(true);
-        saturationSlider.setValue(saturation + 0.5);
         saturationSlider.setStyle("-fx-control-inner-background: palegreen;");
 
         // Saturation label
@@ -73,7 +78,6 @@ public class SettingsView {
         // Contrast slider
         contrastSlider = new Slider(0, 1, 0.5);
         contrastSlider.setShowTickLabels(true);
-        contrastSlider.setValue(contrast + 0.5);
         contrastSlider.setStyle("-fx-control-inner-background: palegreen;");
 
         // Contrast label
@@ -126,41 +130,46 @@ public class SettingsView {
         dropLabel.setFont(new Font(20));
         dropLabel.setTextFill(Color.WHITE);
 
-        Button dropControl = new Button("w");
+        dropControl = new Button("w");
         HBox dropControlBox = new HBox(20, dropLabel, dropControl);
         dropControlBox.setAlignment(Pos.CENTER_RIGHT);
+        dropControl.setFocusTraversable(false);
 
         Label rotateLabel = new Label("ROTATE");
         rotateLabel.setFont(new Font(20));
         rotateLabel.setTextFill(Color.WHITE);
 
-        Button rotateControl = new Button("space");
+        rotateControl = new Button("space");
         HBox rotateControlBox = new HBox(20, rotateLabel, rotateControl);
         rotateControlBox.setAlignment(Pos.CENTER_RIGHT);
+        rotateControl.setFocusTraversable(false);
 
         Label leftLabel = new Label("LEFT");
         leftLabel.setFont(new Font(20));
         leftLabel.setTextFill(Color.WHITE);
 
-        Button leftControl = new Button("a");
+        leftControl = new Button("a");
         HBox leftControlBox = new HBox(20, leftLabel, leftControl);
         leftControlBox.setAlignment(Pos.CENTER_RIGHT);
+        leftControl.setFocusTraversable(false);
 
         Label rightLabel = new Label("RIGHT");
         rightLabel.setFont(new Font(20));
         rightLabel.setTextFill(Color.WHITE);
 
-        Button rightControl = new Button("d");
+        rightControl = new Button("d");
         HBox rightControlBox = new HBox(20, rightLabel, rightControl);
         rightControlBox.setAlignment(Pos.CENTER_RIGHT);
+        rightControl.setFocusTraversable(false);
 
         Label downLabel = new Label("DOWN");
         downLabel.setFont(new Font(20));
         downLabel.setTextFill(Color.WHITE);
 
-        Button downControl = new Button("s");
+        downControl = new Button("s");
         HBox downControlBox = new HBox(20, downLabel, downControl);
         downControlBox.setAlignment(Pos.CENTER_RIGHT);
+        downControl.setFocusTraversable(false);
 
         //vbox containing all control settings
         VBox controlSettings = new VBox(20, controlSettingsLabel, dropControlBox,rotateControlBox, leftControlBox, rightControlBox, downControlBox);
@@ -201,10 +210,42 @@ public class SettingsView {
             updateSettings(borderPane);
         });
 
+        dropControl.setOnAction(e -> {
+            borderPane.setOnKeyReleased(c -> {
+                adjustControls(dropControl, c.getCode(), 0);
+                borderPane.setOnKeyReleased(null);
+            });
+        });
+
+        leftControl.setOnAction(e -> {
+            borderPane.setOnKeyReleased(c -> {
+                adjustControls(leftControl, c.getCode(), 1);
+                borderPane.setOnKeyReleased(null);
+            });
+        });
+        rightControl.setOnAction(e -> {
+            borderPane.setOnKeyReleased(c -> {
+                adjustControls(rightControl, c.getCode(), 2);
+                borderPane.setOnKeyReleased(null);
+            });
+        });
+        downControl.setOnAction(e -> {
+            borderPane.setOnKeyReleased(c -> {
+                adjustControls(downControl, c.getCode(), 3);
+                borderPane.setOnKeyReleased(null);
+            });
+        });
+        rotateControl.setOnAction(e -> {
+            borderPane.setOnKeyReleased(c -> {
+                adjustControls(rotateControl, c.getCode(), 4);
+                borderPane.setOnKeyReleased(null);
+            });
+        });
         borderPane = new BorderPane();
         borderPane.setCenter(settings);
         borderPane.setStyle("-fx-background-color: " + backgroundColor);
         updateSettings(borderPane);
+        updateSettingsView();
 
         var scene = new Scene(borderPane, 800, 800);
         stage.setScene(scene);
@@ -245,6 +286,26 @@ public class SettingsView {
         // TODO
     }
 
+    public void adjustControls(Button button, KeyCode newKey, int moveType){
+        if(!TetrisApp.view.controlMap.containsValue(newKey)){
+            if(newKey == KeyCode.SPACE){
+                button.setText("SPACE");
+            }else{
+                button.setText(newKey.toString());
+            }
+            TetrisApp.view.controlMap.put(moveType, newKey);
+        }
+    }
+    public void updateSettingsView(){
+        brightnessSlider.setValue(brightness + 0.5);
+        saturationSlider.setValue(saturation + 0.5);
+        contrastSlider.setValue(contrast + 0.5);
+        dropControl.setText(TetrisApp.view.controlMap.get(0).toString());
+        leftControl.setText(TetrisApp.view.controlMap.get(1).toString());
+        rightControl.setText(TetrisApp.view.controlMap.get(2).toString());
+        downControl.setText(TetrisApp.view.controlMap.get(3).toString());
+        rotateControl.setText(TetrisApp.view.controlMap.get(4).toString());
+    }
 }
 
 
