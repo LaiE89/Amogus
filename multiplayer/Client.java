@@ -23,6 +23,8 @@ public class Client extends Thread{
     public int localPort;
     public int numConnections = 0;
     public boolean isGameStarted = false;
+    public int sendGarbageLines = 0;
+    public int receiveGarbageLines = 0;
 
     /**
      * Constructor
@@ -47,6 +49,12 @@ public class Client extends Thread{
         // Always receiving packets of data from the server
         while (!this.socket.isClosed()) {
             getPacket();
+            if (receiveGarbageLines > 0 && model.currentY >= model.HEIGHT) {
+                System.out.println("Placing garbage");
+                this.model.getBoard().addGarbage(receiveGarbageLines);
+                this.tetrisView.paintBoard();
+                receiveGarbageLines = 0;
+            }
         }
 
         // "Deleting" this instance of client
@@ -77,6 +85,7 @@ public class Client extends Thread{
             //this.isGameStarted = dis.readBoolean();
             Packet value = (Packet) dis.readObject();
             this.numConnections = value.getNumConnections();
+            this.receiveGarbageLines += value.getSendGarbageLines();
             Platform.runLater(new Runnable() {
                 @Override public void run() {
                     connectView.startButton.setText("Number of players: " + numConnections);
@@ -96,7 +105,7 @@ public class Client extends Thread{
             }
         } catch (IOException e1) {
             try {
-                System.out.println("SERVER GOT SHUTDOWN");
+                System.out.println("SERVER GOT SHUTDOWN: " + e1);
                 this.socket.close();
                 Platform.runLater(new Runnable() {
                     @Override
@@ -130,9 +139,9 @@ public class Client extends Thread{
      * @param isGameStarted true if the lobby game has started
      * @param isGameOver true if this client lost
      */
-    public void sendPacket(int numConnections, boolean isGameStarted, boolean isGameOver) {
+    public void sendPacket(int numConnections, boolean isGameStarted, boolean isGameOver, int sendGarbageLines) {
         try {
-            Packet packet = new Packet(numConnections, isGameStarted, isGameOver);
+            Packet packet = new Packet(numConnections, isGameStarted, isGameOver, sendGarbageLines);
             dos.writeObject(packet);
             dos.flush();
         }catch (IOException e) {

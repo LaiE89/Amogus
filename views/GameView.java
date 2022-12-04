@@ -48,6 +48,7 @@ public class GameView {
 
         // Detecting controls press
         dropPressed.set(false);
+
         borderPane.setOnKeyPressed(new EventHandler<KeyEvent>() {
             @Override
             public void handle(KeyEvent k) {

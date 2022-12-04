@@ -93,7 +93,7 @@ public class Server extends Thread{
             clientSocket.setSoTimeout(clientReadTime);
             clientSockets.add(clientSocket);
             numConnections = clientSockets.size();
-            sendPacket(numConnections, isGameStarted, false);
+            sendPacket(numConnections, isGameStarted, false, 0);
             System.out.println("CLIENT WITH LOCAL ADDRESS: " + clientSocket.getRemoteSocketAddress() + ", HAS REQUESTED TO JOIN. THE CURRENT SERVER LIST OF SIZE " + numConnections + " IS: " + clientSockets.stream().map(Object::toString).collect(Collectors.joining(", ")));
         }catch (IOException e) {
             System.out.println(e.getMessage());
@@ -123,15 +123,32 @@ public class Server extends Thread{
      * @param isGameStarted true if the lobby has started the game
      * @param isGameOver true if the current client has lost (the current client's board is full)
      */
-    public void sendPacket(int numConnections, boolean isGameStarted, boolean isGameOver) {
+    public void sendPacket(int numConnections, boolean isGameStarted, boolean isGameOver, int sendGarbageLines) {
         for (Socket socket : clientSockets) {
             try {
-                Packet packet = new Packet(numConnections, isGameStarted, isGameOver);
+                Packet packet = new Packet(numConnections, isGameStarted, isGameOver, sendGarbageLines);
                 serverDos.get(socket).writeObject(packet);
                 serverDos.get(socket).flush();
             }catch (IOException e) {
                 System.out.println(e.getMessage());
             }
+        }
+    }
+
+    public void sendPacketToRandomClient(Socket sender, int numConnections, boolean isGameStarted, boolean isGameOver, int sendGarbageLines) {
+        List<Socket> clientsCopy;
+        synchronized (lock) {
+            clientsCopy = new ArrayList<>(clientSockets);
+        }
+        clientsCopy.remove(sender);
+        int index = (int)(Math.random() * clientsCopy.size());
+        try {
+            System.out.println("Sending " + sendGarbageLines + " lines of garbage to " + clientsCopy.get(index));
+            Packet packet = new Packet(numConnections, isGameStarted, isGameOver, sendGarbageLines);
+            serverDos.get(clientsCopy.get(index)).writeObject(packet);
+            serverDos.get(clientsCopy.get(index)).flush();
+        }catch (IOException e) {
+            System.out.println(e.getMessage());
         }
     }
 
@@ -149,8 +166,12 @@ public class Server extends Thread{
                 System.out.println("Receiving packet from: " + socket.getPort());
                 Packet value = (Packet) serverDis.get(socket).readObject();
                 boolean isGameOver = value.getIsGameOver();
+                int sendGarbageLines = value.getSendGarbageLines();
                 if (isGameOver) {
                     numGameOvers += 1; // numGameOvers is only accessed here and this method is called once in only one thread so synchronization is not needed
+                }
+                if (sendGarbageLines > 0) {
+                    sendPacketToRandomClient(socket, numConnections, isGameStarted, false, sendGarbageLines);
                 }
             }catch (SocketTimeoutException e) {
                 // Nothing to read in current socket
@@ -189,7 +210,7 @@ public class Server extends Thread{
             System.out.println("Disconnecting " + socket.getPort());
             removeClient(socket);
             numConnections = clientSockets.size();
-            sendPacket(numConnections, isGameStarted, false);
+            sendPacket(numConnections, isGameStarted, false, 0);
         }catch (IOException e) {
             System.out.println("Send Disconnect Update did not go through: " + e.getMessage());
         }

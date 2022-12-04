@@ -245,13 +245,19 @@ public class TetrisModel implements Serializable {
             TetrisApp.view.gameView.timeline.stop();
             int cleared = board.clearRows();
             if (cleared > 0) {
-                    // scores go up by 5, 10, 20, 40 as more rows are cleared
                 switch (cleared) {
+                    case 1:
                     case 2:
+                        // Send 1 line of garbage
+                        this.client.sendPacket(this.client.numConnections, true,true, 1);
                         break;
                     case 3:
+                        // Send 2 lines of garbage
+                        this.client.sendPacket(this.client.numConnections, true,true, 2);
                         break;
                     case 4:
+                        // Send 4 lines of garbage
+                        this.client.sendPacket(this.client.numConnections, true,true, 4);
                         break;
                     default:
                 }
@@ -284,7 +290,7 @@ public class TetrisModel implements Serializable {
             //TetrisApp.view.timer.stop();
             //TetrisApp.view.timeline.stop();
         }else { // If the game is a multiplayer game, tell the server that this player lost
-            this.client.sendPacket(this.client.numConnections, true,true);
+            this.client.sendPacket(this.client.numConnections, true,true, 0);
             this.isMultiplayer = false;
         }
         gameOn = false;
