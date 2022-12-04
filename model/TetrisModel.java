@@ -227,6 +227,7 @@ public class TetrisModel {
             System.out.println("Placing garbage");
             garbageOverflow = this.board.addGarbage(this.client.receiveGarbageLines);
             this.client.receiveGarbageLines = 0;
+            this.client.sendPacket(this.client.numConnections, true,false, 0);
             this.board.commit();
         }
 

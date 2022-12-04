@@ -1,7 +1,6 @@
 package multiplayer;
 
 import model.TetrisBoard;
-import model.TetrisModel;
 import views.ConnectView;
 import views.TetrisView;
 import java.io.ObjectInputStream;
@@ -9,7 +8,6 @@ import java.io.ObjectOutputStream;
 import java.io.IOException;
 import java.net.*;
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class Server extends Thread{
 
@@ -19,7 +17,7 @@ public class Server extends Thread{
     public HashMap<Socket, ObjectInputStream> serverDis = new HashMap<>(); // Receives data from all clients
     public HashMap<Socket, ObjectOutputStream> serverDos = new HashMap<>(); // Sends data to all clients
     HashMap<Socket, Boolean> clientSockets = new HashMap<>();
-    private int clientReadTime = 1000;
+    private int clientReadTime = 250; // Determines how fast the server receives info from clients. Lower = faster. This is in ms, so 1000 = 1 second.
     public final Object lock = new Object(); // A monitor lock. Ensures synchronization when accessing <clientSockets>
     public int numConnections = 0;
     public boolean isGameStarted = false;
@@ -121,9 +119,12 @@ public class Server extends Thread{
     /**
      * Sends a packet of data to all clients.
      *
+     * @param sender the port number of the client that sent this data
      * @param numConnections the number of current connections
      * @param isGameStarted true if the lobby has started the game
      * @param isGameOver true if the current client has lost (the current client's board is full)
+     * @param sendGarbageLines the quantity of garbage lines that the sender is sending
+     * @param senderBoard the board of the client that sent this data
      */
     public void sendPacket(int sender, int numConnections, boolean isGameStarted, boolean isGameOver, int sendGarbageLines, TetrisBoard senderBoard) {
         for (Socket socket : clientSockets.keySet()) {
@@ -137,6 +138,15 @@ public class Server extends Thread{
         }
     }
 
+    /**
+     * Sends a packet of data to a random client.
+     *
+     * @param sender the socket of the client that sent this data
+     * @param numConnections the number of current connections
+     * @param isGameStarted true if the lobby has started the game
+     * @param isGameOver true if the current client has lost (the current client's board is full)
+     * @param sendGarbageLines the quantity of garbage lines that will be sent to the random client
+     */
     public void sendPacketToRandomClient(Socket sender, int numConnections, boolean isGameStarted, boolean isGameOver, int sendGarbageLines) {
         HashMap<Socket, Boolean> clientsCopy;
         synchronized (lock) {

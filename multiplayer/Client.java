@@ -56,7 +56,6 @@ public class Client extends Thread {
     }
 
     public void run() {
-
         Thread updateBoard = new Thread(new Runnable() {
             @Override
             public void run() {
@@ -167,6 +166,7 @@ public class Client extends Thread {
      * @param numConnections the number of total connections to the lobby
      * @param isGameStarted true if the lobby game has started
      * @param isGameOver true if this client lost
+     * @param sendGarbageLines the amount of garbage lines that this client is sending
      */
     public void sendPacket(int numConnections, boolean isGameStarted, boolean isGameOver, int sendGarbageLines) {
         try {

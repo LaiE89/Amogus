@@ -2,29 +2,36 @@ package views;
 
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.Group;
 import javafx.scene.Scene;
+import javafx.scene.canvas.Canvas;
 import javafx.scene.control.Button;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
 import model.TetrisApp;
-import model.TetrisModel;
-
-import java.util.HashMap;
 
 public class MultiplayerView extends GameView{
     VBox opponentsBoardsLeft;
     VBox opponentsBoardsRight;
     public MultiplayerView() {
         super();
-        TetrisApp.view.opBoard1 = new Group();
-        TetrisApp.view.opBoard2 = new Group();
-        TetrisApp.view.opBoard3 = new Group();
-        TetrisApp.view.opBoard4 = new Group();
+
+        int ratio = 2; // ratio from regular board size to opponent board size
+        double opHeight = TetrisApp.view.height / ratio;
+        double opWidth = TetrisApp.view.width / ratio;
+
+        TetrisApp.view.opBoard1 = new Canvas(opWidth, opHeight);
+        TetrisApp.view.opBoard2 = new Canvas(opWidth, opHeight);
+        TetrisApp.view.opBoard3 = new Canvas(opWidth, opHeight);
+        TetrisApp.view.opBoard4 = new Canvas(opWidth, opHeight);
 
         opponentsBoardsLeft = new VBox(20, TetrisApp.view.opBoard1, TetrisApp.view.opBoard3);
         opponentsBoardsRight = new VBox(20, TetrisApp.view.opBoard2, TetrisApp.view.opBoard4);
+        opponentsBoardsLeft.setPadding(new Insets(0, 0, 0, 50));
+        opponentsBoardsLeft.setAlignment(Pos.CENTER);
+        opponentsBoardsRight.setPadding(new Insets(0, 50, 0, 0));
+        opponentsBoardsRight.setAlignment(Pos.CENTER);
+
         Button chatButton = new Button("Chat");
         chatButton.setId("Chat");
         chatButton.setFocusTraversable(false);
@@ -42,10 +49,10 @@ public class MultiplayerView extends GameView{
             this.borderPane.requestFocus();
         });
 
-        borderPane.setTop(controls);
-        borderPane.setCenter(canvas);
         borderPane.setLeft(opponentsBoardsLeft);
         borderPane.setRight(opponentsBoardsRight);
+        borderPane.setTop(controls);
+        borderPane.setCenter(canvas);
         SettingsView.updateSettings(borderPane);
 
         var scene = new Scene(borderPane, 800, 800);

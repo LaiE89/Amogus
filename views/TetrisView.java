@@ -1,44 +1,23 @@
 package views;
 
-import javafx.animation.Animation;
-import javafx.animation.AnimationTimer;
-import javafx.beans.binding.BooleanBinding;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.SimpleBooleanProperty;
 import javafx.scene.Group;
-import javafx.scene.Node;
-import javafx.scene.effect.ColorAdjust;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Rectangle;
-import javafx.scene.shape.Shape;
-import javafx.util.Pair;
 import model.TetrisApp;
 import model.TetrisBoard;
 import model.TetrisModel;
-
-import javafx.animation.KeyFrame;
-import javafx.animation.Timeline;
-import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.input.KeyCode;
-import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.stage.Stage;
-import javafx.util.Duration;
 import model.TetrisPoint;
-
-import java.net.Socket;
-import java.util.*;
-
 
 /**
  * Tetris View
@@ -54,10 +33,10 @@ public class TetrisView {
     Button singleplayerButton, chatButton, multiplayerButton, settingsButton; //buttons for functions
     Canvas canvas;
     GraphicsContext gc; //the graphics context will be linked to the canvas
-    protected Group opBoard1;
-    protected Group opBoard2;
-    protected Group opBoard3;
-    protected Group opBoard4;
+    protected Canvas opBoard1;
+    protected Canvas opBoard2;
+    protected Canvas opBoard3;
+    protected Canvas opBoard4;
 
     // Board Variables
     int pieceWidth = 20; //width of block on display
@@ -223,59 +202,76 @@ public class TetrisView {
         }
     }
 
+    /**
+     * Given a board position and an opponent board, draws the
+     * Tetris board in the given position.
+     *
+     * @param boardPos an integer representing the board position
+     * @param opponentBoard a TetrisBoard object representing the opponents board
+     */
     public void paintOpponentBoards(int boardPos, TetrisBoard opponentBoard) {
+        //System.out.println("Board Position: " + boardPos + ", Opponent Board: " + opponentBoard);
         switch (boardPos) {
             case 1:
-                //opBoard1 = drawOpponentBoard(0, 0, opponentBoard);
+                drawOpponentBoard(opBoard1, opponentBoard);
+                break;
             case 2:
-                //opBoard2 = drawOpponentBoard(0, 0, opponentBoard);
+                drawOpponentBoard(opBoard2, opponentBoard);
+                break;
             case 3:
-                //opBoard3 = drawOpponentBoard(0, 0, opponentBoard);
+                drawOpponentBoard(opBoard3, opponentBoard);
+                break;
             case 4:
-                //opBoard4 = drawOpponentBoard(0, 0, opponentBoard);
+                drawOpponentBoard(opBoard4, opponentBoard);
+                break;
+            default:
+                break;
         }
     }
 
-    private Group drawOpponentBoard(int posX, int posY, TetrisBoard opBoard) {
-        Group result = new Group();
-        int ratio = 4; // ratio from regular board size to opponent board size
-        double oppHeight = (this.model.getHeight() - 1) / ratio;
-        double oppWidth = (this.model.getWidth() - 1) / ratio;
-        double opHeight = this.model.getHeight() / ratio;
-        double opWidth = this.model.getWidth() / ratio;
-        Rectangle board = new Rectangle(posX, posY, oppWidth, oppHeight);
-        board.setFill(Color.BLACK);
-        board.setStroke(Color.BLACK);
-        result.getChildren().add(board);
+    /**
+     * Given a canvas and a board. Draws the board using the 2D graphics
+     * context of the canvas.
+     *
+     * @param canvas the canvas that the board will be drawn on
+     * @param opBoard a TetrisBoard object the board that will be drawn
+     */
+    private void drawOpponentBoard(Canvas canvas, TetrisBoard opBoard) {
+        GraphicsContext gc = canvas.getGraphicsContext2D();
+
+        int ratio = 2; // ratio from regular board size to opponent board size
+
+        double opHeight = this.height / ratio;
+        double opWidth = this.width / ratio;
+        final float dX = ((float)(opWidth-2)) / opBoard.getWidth();
+        final float dY = ((float)(opHeight-2)) / opBoard.getHeight();
+        final int dx = Math.round(dX-2);
+        final int dy = Math.round(dY-2);
+        final int bWidth = opBoard.getWidth();
+
+        gc.setStroke(Color.BLACK);
+        gc.setFill(Color.BLACK);
+        gc.fillRect(0, 0,  opWidth-1, opHeight-1);
 
         // Draw the line separating the top area on the screen
-        int spacerY = yPixel(opBoard.getHeight() - this.model.BUFFERZONE - 1);
-        Line line = new Line(posX, spacerY, oppWidth, spacerY);
-        line.setStroke(Color.GRAY);
-        result.getChildren().add(line);
-
-        // Factor a few things out to help the optimizer
-        final float dX = (float)((opWidth-2) / opWidth);
-        final float dY = (float)((opHeight-2) / opHeight);
-        final int dx = Math.round(dX - 2);
-        final int dy = Math.round(dY - 2);
-        final int bWidth = (opBoard.getWidth());
+        gc.setStroke(Color.GRAY);
+        int spacerY = (int) Math.round(opHeight -1 - ( (opBoard.getHeight() - this.model.BUFFERZONE - 1) +1)*dY);
+        gc.strokeLine(0, spacerY, opWidth-1, spacerY);
 
         int x, y;
         // Loop through and draw all the blocks; sizes of blocks are calibrated relative to screen size
-        for (x = 0; x < bWidth; x++) {
-            int left = xPixel(x);    // the left pixel
+        for (x=0; x<bWidth; x++) {
+            int left = (int)Math.round((x)*dX) ;	// the left pixel
             // draw from 0 up to the col height
             final int yHeight = opBoard.getColumnHeight(x);
-            for (y = 0; y < yHeight; y++) {
+            for (y=0; y<yHeight; y++) {
                 if (opBoard.getGrid(x, y)) {
-                    Rectangle piece = new Rectangle(left + 1, yPixel(y), dx, dy);
-                    piece.setFill(opBoard.getGridColor(x, y));
-                    result.getChildren().add(piece);
+                    gc.setFill(opBoard.getGridColor(x, y));
+                    gc.fillRect(left+1, (int) Math.round(opHeight -1 - (y+1)*dY) + 1, dx, dy);
+                    gc.setFill(Color.BLACK);
                 }
             }
         }
-        return result;
     }
 
     /**
