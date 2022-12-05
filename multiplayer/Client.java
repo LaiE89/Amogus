@@ -60,6 +60,7 @@ public class Client extends Thread {
             @Override
             public void run() {
                 while (!socket.isClosed()) {
+                    // TODO There is a bug involving receiving garbage while the current block is falling. This causes the server to detect the client as a disconnect occasionally
                     if (receiveGarbageLines > 0 && model.currentY >= model.HEIGHT) {
                         model.modelTick(TetrisModel.MoveType.GARBAGE);
                         TetrisApp.view.paintBoard();

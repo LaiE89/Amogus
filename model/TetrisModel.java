@@ -145,7 +145,7 @@ public class TetrisModel {
         if (result > TetrisBoard.ADD_ROW_FILLED) {
             stopGame(); //oops, we lost.
         }
-        this.client.sendPacket(this.client.numConnections, true,false, 0);
+        if (this.isMultiplayer) this.client.sendPacket(this.client.numConnections, true,false, 0);
     }
 
     /**
@@ -227,7 +227,7 @@ public class TetrisModel {
             System.out.println("Placing garbage");
             garbageOverflow = this.board.addGarbage(this.client.receiveGarbageLines);
             this.client.receiveGarbageLines = 0;
-            this.client.sendPacket(this.client.numConnections, true,false, 0);
+            if (this.isMultiplayer) this.client.sendPacket(this.client.numConnections, true,false, 0);
             this.board.commit();
         }
 
@@ -247,7 +247,7 @@ public class TetrisModel {
         if ((canPlace && failed && verb == MoveType.DOWN) || verb == MoveType.DROP) {    // if it's out of bounds due to falling
             TetrisApp.view.gameView.timeline.stop();
             int cleared = board.clearRows();
-            if (cleared > 0) {
+            if (cleared > 0 && this.isMultiplayer) {
                 switch (cleared) {
                     case 1:
                     case 2:
