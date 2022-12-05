@@ -27,7 +27,9 @@ public class GameView {
     protected BorderPane borderPane;
     protected Stage stage;
     protected Canvas canvas;
+    protected Canvas holdPieceCanvas;
     protected GraphicsContext gc;
+    protected GraphicsContext holdgc;
     protected TetrisModel model;
 
     public GameView () {
@@ -36,6 +38,8 @@ public class GameView {
         stage = TetrisApp.view.stage;
         canvas = TetrisApp.view.canvas;
         gc = TetrisApp.view.gc;
+        holdPieceCanvas = TetrisApp.view.holdPieceVisual;
+        holdgc = TetrisApp.view.holdgc;
         stage.setTitle("CSC207 Tetris");
 
         updateMoveBindings(TetrisApp.view.controlMap);

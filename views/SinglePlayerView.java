@@ -6,6 +6,7 @@ import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.control.Slider;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
@@ -24,6 +25,14 @@ public class SinglePlayerView extends GameView{
         garbageSpeedLabel.setFont(new Font(20));
         garbageSpeedLabel.setTextFill(Color.WHITE);
 
+        Label holdPieceLabel = new Label("Hold");
+        holdPieceLabel.setFont(new Font(20));
+        holdPieceLabel.setTextFill(Color.WHITE);
+
+        VBox holdPieceBox = new VBox(20, holdPieceLabel, holdPieceCanvas);
+        holdPieceBox.setPadding(new Insets(40, 20, 20, 20));
+        holdPieceBox.setAlignment(Pos.TOP_CENTER);
+
         addGarbageSpeed.setOnMouseReleased(e -> {
             double rateMultiplier = addGarbageSpeed.getValue() * 0.03;
             adjustGarbageSpeed(rateMultiplier);
@@ -33,6 +42,7 @@ public class SinglePlayerView extends GameView{
         botBox.setPadding(new Insets(20, 20, 20, 20));
         botBox.setAlignment(Pos.TOP_CENTER);
 
+        borderPane.setTop(holdPieceBox);
         borderPane.setCenter(canvas);
         borderPane.setBottom(botBox);
         SettingsView.updateSettings(borderPane);

@@ -4,7 +4,10 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 
 public class MultiplayerView extends GameView{
@@ -22,13 +25,22 @@ public class MultiplayerView extends GameView{
         controls.setPadding(new Insets(20, 20, 20, 20));
         controls.setAlignment(Pos.CENTER);
 
+        Label holdPieceLabel = new Label("Hold");
+        holdPieceLabel.setFont(new Font(20));
+        holdPieceLabel.setTextFill(Color.WHITE);
+
+        VBox holdPieceBox = new VBox(20, holdPieceLabel, holdPieceCanvas);
+        holdPieceBox.setPadding(new Insets(40, 20, 20, 20));
+        holdPieceBox.setAlignment(Pos.TOP_CENTER);
+
         chatButton.setOnAction(e -> {
             //TO DO!
             this.createChatView();
             this.borderPane.requestFocus();
         });
 
-        borderPane.setTop(controls);
+        borderPane.setBottom(controls);
+        borderPane.setTop(holdPieceBox);
         borderPane.setCenter(canvas);
         SettingsView.updateSettings(borderPane);
 

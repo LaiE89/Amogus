@@ -14,9 +14,7 @@ import views.TetrisView;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.Arrays;
-import java.util.Random;
-import java.util.Timer;
+import java.util.*;
 
 /** Represents a Tetris Model for Tetris.  
  * Based on the Tetris assignment in the Nifty Assignments Database, authored by Nick Parlante
@@ -33,13 +31,13 @@ public class TetrisModel implements Serializable {
     protected TetrisPiece newPiece; //next piece to be placed
     protected int count;		 // how many pieces played so far
     protected int score; //the player's score
-
     public int currentX;
     protected int newX;
     public int currentY;
     protected int newY;
     public int floorY; // y-value that the piece will fall to
     public boolean canPlace = true;
+    public LinkedList<TetrisPiece> holdPiece = new LinkedList<>();
 
     // State of the game
     public boolean gameOn;	// true if we are playing
@@ -62,7 +60,8 @@ public class TetrisModel implements Serializable {
         LEFT,
         RIGHT,
         DROP,
-        DOWN
+        DOWN,
+        HOLD
     }
 
     /**
@@ -114,7 +113,9 @@ public class TetrisModel implements Serializable {
         gameOn = true;
         score = 0;
         count = 0;
+        holdPiece.clear();
         TetrisApp.view.paintBoard();
+        TetrisApp.view.paintHoldPiece();
 
         // Check if current game is multiplayer
         if (ConnectView.client != null && ConnectView.client.isGameStarted) {
@@ -167,7 +168,18 @@ public class TetrisModel implements Serializable {
                     newY = currentY;
                 }
                 break;
-
+            case HOLD:
+                // If move is hold, then switch to new piece
+                if (holdPiece.isEmpty()) {
+                    holdPiece.add(newPiece);
+                    newPiece = pickNextPiece();
+                }else {
+                    TetrisPiece oldPiece = holdPiece.pop();
+                    holdPiece.add(newPiece);
+                    newPiece = oldPiece;
+                }
+                TetrisApp.view.paintHoldPiece();
+                break;
             default: //doh!
                 throw new RuntimeException("Bad movement!");
         }
@@ -286,7 +298,6 @@ public class TetrisModel implements Serializable {
 
         // If move is drop, instantly place piece and add new piece
         if ((canPlace && failed && verb==MoveType.DOWN) || verb==MoveType.DROP) {    // if it's out of bounds due to falling
-            //TetrisApp.view.gameView.timeline.stop();
             this.downTimeline.stop();
             int cleared = board.clearRows();
             if (cleared > 0) {
@@ -326,10 +337,6 @@ public class TetrisModel implements Serializable {
             TetrisApp.view.initUI();
             this.controlsTimer.stop();
             this.downTimeline.stop();
-            //TetrisApp.view.gameView.timer.stop();
-            //TetrisApp.view.gameView.timeline.stop();
-            //TetrisApp.view.timer.stop();
-            //TetrisApp.view.timeline.stop();
         }else { // If the game is a multiplayer game, tell the server that this player lost
             this.client.sendPacket(this.client.numConnections, true,true);
             this.isMultiplayer = false;

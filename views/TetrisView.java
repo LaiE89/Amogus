@@ -27,6 +27,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.stage.Stage;
 import javafx.util.Duration;
+import model.TetrisPiece;
 import model.TetrisPoint;
 
 import java.util.ArrayList;
@@ -47,6 +48,8 @@ public class TetrisView {
     Button singleplayerButton, chatButton, multiplayerButton, settingsButton; //buttons for functions
     Canvas canvas;
     GraphicsContext gc; //the graphics context will be linked to the canvas
+    protected Canvas holdPieceVisual;
+    GraphicsContext holdgc;
 
     // Board Variables
     int pieceWidth = 20; //width of block on display
@@ -82,6 +85,7 @@ public class TetrisView {
         controlMap.put(2, KeyCode.D); //2 represents right
         controlMap.put(3, KeyCode.S); //3 represents down
         controlMap.put(4, KeyCode.SPACE); //4 represents rotate
+        controlMap.put(5, KeyCode.E); //5 represents hold
     }
 
     /**
@@ -184,6 +188,7 @@ public class TetrisView {
      * Draw the board
      */
     public void paintBoard() {
+
         gc.setStroke(Color.BLACK);
         gc.setFill(Color.BLACK);
         gc.fillRect(0, 0, this.width-1, this.height-1);
@@ -222,6 +227,28 @@ public class TetrisView {
         }
     }
 
+    public void paintHoldPiece() {
+
+        holdgc.setStroke(Color.BLACK);
+        holdgc.setFill(Color.BLACK);
+        holdgc.fillRect(0, 0, 4*pieceWidth + 2, 6*pieceWidth + 2);
+
+        float dX = (float)(4*pieceWidth + 2-2) / 4;
+        float dY = (float)(4*pieceWidth + 2-2) / 4;
+        final int dx = Math.round(dX-2);
+        final int dy = Math.round(dY-2);
+
+        if (!this.model.holdPiece.isEmpty()) {
+            TetrisPiece holdPiece = this.model.holdPiece.get(0);
+            for (TetrisPoint point : holdPiece.getBody()) {
+                holdgc.setFill(holdPiece.getColor());
+                holdgc.fillRect((int) Math.round((point.x)*dX) +1, (int)Math.round(4*pieceWidth + 2 -1 - (point.y+1)*dY) +1, dx, dy);
+                holdgc.setFill(Color.BLACK);
+            }
+        }
+    }
+
+
     /**
      * Create the settings view to modify the client's settings
      */
@@ -237,6 +264,11 @@ public class TetrisView {
         canvas = new Canvas(this.width, this.height);
         canvas.setId("Canvas");
         gc = canvas.getGraphicsContext2D();
+
+        holdPieceVisual = new Canvas(4*pieceWidth + 2, 4*pieceWidth + 2);
+        holdPieceVisual.setId("HoldPieceVisual");
+        holdgc = holdPieceVisual.getGraphicsContext2D();
+
         gameView = new SinglePlayerView();
     }
 
@@ -248,6 +280,11 @@ public class TetrisView {
         canvas = new Canvas(this.width, this.height);
         canvas.setId("Canvas");
         gc = canvas.getGraphicsContext2D();
+
+        holdPieceVisual = new Canvas(4*pieceWidth + 2, 4*pieceWidth + 2);
+        holdPieceVisual.setId("HoldPieceVisual");
+        holdgc = holdPieceVisual.getGraphicsContext2D();
+
         gameView = new MultiplayerView();
     }
 
