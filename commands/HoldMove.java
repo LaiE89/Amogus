@@ -14,4 +14,9 @@ public class HoldMove implements Moves{
     public void execute() {
         model.modelTick(TetrisModel.MoveType.ROTATE);
     }
+
+    @Override
+    public void stop() {
+
+    }
 }

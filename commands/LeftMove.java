@@ -11,6 +11,17 @@ public class LeftMove implements Moves{
 
     @Override
     public void execute() {
-        model.modelTick(TetrisModel.MoveType.LEFT);
+        model.isLeftPressed = true;
+        model.controlsTimer.start();
+        model.canPlace = false;
+    }
+
+    @Override
+    public void stop() {
+        model.isLeftPressed = false;
+        if (!model.isDownPressed && !model.isRightPressed) {
+            model.canPlace = true;
+            model.controlsTimer.stop();
+        }
     }
 }

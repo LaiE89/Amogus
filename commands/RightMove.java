@@ -12,6 +12,17 @@ public class RightMove implements Moves{
 
     @Override
     public void execute() {
-        model.modelTick(TetrisModel.MoveType.RIGHT);
+        model.isRightPressed = true;
+        model.controlsTimer.start();
+        model.canPlace = false;
+    }
+
+    @Override
+    public void stop() {
+        model.isRightPressed = false;
+        if (!model.isDownPressed && !model.isLeftPressed) {
+            model.canPlace = true;
+            model.controlsTimer.stop();
+        }
     }
 }

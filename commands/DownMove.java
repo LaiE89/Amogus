@@ -1,5 +1,6 @@
 package commands;
 
+import javafx.animation.Animation;
 import model.TetrisModel;
 
 public class DownMove implements Moves{
@@ -12,6 +13,20 @@ public class DownMove implements Moves{
 
     @Override
     public void execute() {
-        model.modelTick(TetrisModel.MoveType.DOWN);
+        model.isDownPressed = true;
+        model.controlsTimer.start();
+        model.canPlace = false;
+    }
+
+    @Override
+    public void stop() {
+        model.isDownPressed = false;
+        if (!model.isLeftPressed && !model.isRightPressed) {
+            model.canPlace = true;
+            model.controlsTimer.stop();
+        }
+        if (model.downTimeline.getStatus() == Animation.Status.RUNNING) {
+            model.downTimeline.setRate(1);
+        }
     }
 }

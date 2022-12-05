@@ -30,6 +30,7 @@ import javafx.util.Duration;
 import model.TetrisPoint;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 
 /**
@@ -52,6 +53,9 @@ public class TetrisView {
     public double width; //height and width of canvas
     public double height;
 
+    // Controls
+    public HashMap<Integer, KeyCode> controlMap = new HashMap<>();
+
     // Scene References;
     public ConnectView connectView;
     public SettingsView settingsView;
@@ -71,6 +75,13 @@ public class TetrisView {
         this.model = model;
         this.stage = stage;
         initUI();
+
+        // Initializing control map. These are the default controls
+        controlMap.put(0, KeyCode.W); //0 represents drop
+        controlMap.put(1, KeyCode.A); //1 represents left
+        controlMap.put(2, KeyCode.D); //2 represents right
+        controlMap.put(3, KeyCode.S); //3 represents down
+        controlMap.put(4, KeyCode.SPACE); //4 represents rotate
     }
 
     /**

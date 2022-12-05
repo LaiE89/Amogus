@@ -103,8 +103,10 @@ public class Client extends Thread{
                     public void run() {
                         if (isGameStarted) {
                             tetrisView.initUI();
-                            tetrisView.gameView.timer.stop();
-                            tetrisView.gameView.timeline.stop();
+                            model.controlsTimer.stop();
+                            model.downTimeline.stop();
+                            //tetrisView.gameView.timer.stop();
+                            //tetrisView.gameView.timeline.stop();
                             model.gameOn = false;
                         }
                         else {
