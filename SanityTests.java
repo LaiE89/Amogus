@@ -1,9 +1,11 @@
+import model.TetriminoPool;
 import model.TetrisPiece;
 import model.TetrisBoard;
 
 import model.TetrisPoint;
 import org.junit.jupiter.api.Test;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -515,5 +517,18 @@ public class SanityTests {
         for(int i = 0; i < board.getHeight(); i++){
             System.out.print(board.getRowWidth(i) + " ");
         }
+    }
+
+    @Test
+    void PoolingTest() {
+        TetrisBoard board = new TetrisBoard(5, 12);board.commit();
+        TetriminoPool pool = new TetriminoPool();
+        ArrayList<TetrisPiece> originalPool = new ArrayList<>(pool.getTetriminoPool());
+        TetrisPiece newPiece = pool.acquireTetrimino();
+        assertTrue(pool.getTetriminoPool().size() < originalPool.size());
+        board.placePiece(newPiece, 0, 0);
+        System.out.println(board);
+        pool.releaseTetrimino(newPiece);
+        assertTrue(originalPool.size() == pool.getTetriminoPool().size());
     }
 }

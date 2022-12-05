@@ -36,7 +36,6 @@ public class TetriminoPool {
      * @return a random TetrisPiece object from the pool.
      */
     public TetrisPiece acquireTetrimino() {
-        System.out.println(tetriminoPool.toString());
         int pieceNum = (int) (tetriminoPool.size() * random.nextDouble());
         TetrisPiece returnPiece = tetriminoPool.remove(pieceNum);
         return returnPiece;
@@ -49,5 +48,9 @@ public class TetriminoPool {
      */
     public void releaseTetrimino(TetrisPiece piece) {
         if (piece != null) tetriminoPool.add(piece);
+    }
+
+    public ArrayList<TetrisPiece> getTetriminoPool() {
+        return this.tetriminoPool;
     }
 }
