@@ -76,29 +76,29 @@ public class TetrisModel implements Serializable {
         controlsTimer = new AnimationTimer() {
             @Override
             public void handle(long now) {
-                if (now - lastUpdate >= 80_000_000) { // Prevent this loop from occurring more than once every 80 milliseconds
-                    if (isDownPressed) {
-                        if (downTimeline.getStatus() != Animation.Status.RUNNING) {
-                            downTimeline = new Timeline(new KeyFrame(Duration.seconds(0.5), e -> {
-                                modelTick(TetrisModel.MoveType.DOWN);
-                                TetrisApp.view.paintBoard();
-                            }));
-                            downTimeline.setCycleCount(Timeline.INDEFINITE);
-                            downTimeline.play();
-                        }else {
-                            downTimeline.setRate(10);
-                        }
+            if (now - lastUpdate >= 80_000_000) { // Prevent this loop from occurring more than once every 80 milliseconds
+                if (isDownPressed) {
+                    if (downTimeline.getStatus() != Animation.Status.RUNNING) {
+                        downTimeline = new Timeline(new KeyFrame(Duration.seconds(0.5), e -> {
+                            modelTick(TetrisModel.MoveType.DOWN);
+                            TetrisApp.view.paintBoard();
+                        }));
+                        downTimeline.setCycleCount(Timeline.INDEFINITE);
+                        downTimeline.play();
+                    }else {
+                        downTimeline.setRate(10);
                     }
-                    if (isRightPressed) {
-                        modelTick(TetrisModel.MoveType.RIGHT);
-                        TetrisApp.view.paintBoard();
-                    }
-                    if (isLeftPressed) {
-                        modelTick(TetrisModel.MoveType.LEFT);
-                        TetrisApp.view.paintBoard();
-                    }
-                    lastUpdate = now;
                 }
+                if (isRightPressed) {
+                    modelTick(TetrisModel.MoveType.RIGHT);
+                    TetrisApp.view.paintBoard();
+                }
+                if (isLeftPressed) {
+                    modelTick(TetrisModel.MoveType.LEFT);
+                    TetrisApp.view.paintBoard();
+                }
+                lastUpdate = now;
+            }
             }
         };
     }
@@ -114,8 +114,10 @@ public class TetrisModel implements Serializable {
         score = 0;
         count = 0;
         holdPiece.clear();
-        TetrisApp.view.paintBoard();
-        TetrisApp.view.paintHoldPiece();
+        if (TetrisApp.view != null) {
+            TetrisApp.view.paintBoard();
+            TetrisApp.view.paintHoldPiece();
+        }
 
         // Check if current game is multiplayer
         if (ConnectView.client != null && ConnectView.client.isGameStarted) {
@@ -179,7 +181,7 @@ public class TetrisModel implements Serializable {
                     holdPiece.add(newPiece);
                     newPiece = oldPiece;
                 }
-                TetrisApp.view.paintHoldPiece();
+                if (TetrisApp.view != null) TetrisApp.view.paintHoldPiece();
                 break;
             default: //doh!
                 throw new RuntimeException("Bad movement!");

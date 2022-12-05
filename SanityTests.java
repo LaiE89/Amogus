@@ -1,8 +1,13 @@
+import commands.HoldMove;
+import commands.LeftMove;
+import commands.Moves;
+import model.TetrisModel;
 import model.TetrisPiece;
 import model.TetrisBoard;
 
 import model.TetrisPoint;
 import org.junit.jupiter.api.Test;
+import views.GameView;
 
 import java.util.Arrays;
 
@@ -515,5 +520,17 @@ public class SanityTests {
         for(int i = 0; i < board.getHeight(); i++){
             System.out.print(board.getRowWidth(i) + " ");
         }
+    }
+
+    @Test
+    void holdPieceTest() {
+        TetrisModel model = new TetrisModel();
+        model.startGame();
+        assertTrue(model.holdPiece.size() == 0);
+        Moves holdMove = new HoldMove(model);
+        holdMove.execute();
+        assertTrue(model.holdPiece.size() == 1);
+        holdMove.execute();
+        assertTrue(model.holdPiece.size() == 1);
     }
 }
