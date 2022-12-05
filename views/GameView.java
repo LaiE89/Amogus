@@ -1,5 +1,6 @@
 package views;
 
+import commands.*;
 import javafx.animation.Animation;
 import javafx.animation.AnimationTimer;
 import javafx.animation.KeyFrame;
@@ -15,8 +16,13 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
 import javafx.util.Duration;
+import javafx.util.Pair;
 import model.TetrisApp;
 import model.TetrisModel;
+
+import java.security.Key;
+import java.util.ArrayList;
+import java.util.HashMap;
 
 public class GameView {
 
@@ -30,6 +36,11 @@ public class GameView {
     BooleanProperty downPressed = new SimpleBooleanProperty();
     BooleanProperty dropPressed = new SimpleBooleanProperty();
     BooleanBinding anyPressed = downPressed.or(rightPressed).or(leftPressed).or(rotatePressed);
+
+    // Key Binds variables
+    public ArrayList<Pair<KeyCode, Moves>> movesList = new ArrayList<>(); // This will be updated by settings
+    public HashMap<KeyCode, Moves> bindActions = new HashMap<>();
+    public HashMap<Class, KeyCode> reversedBindActions = new HashMap<>();
 
     // Reference to TetrisView variables
     protected BorderPane borderPane;
@@ -46,31 +57,34 @@ public class GameView {
         gc = TetrisApp.view.gc;
         stage.setTitle("CSC207 Tetris");
 
+        initializeMovesList();
+        updateMovesBindings();
+
         // Detecting controls press
         dropPressed.set(false);
         borderPane.setOnKeyPressed(new EventHandler<KeyEvent>() {
             @Override
             public void handle(KeyEvent k) {
                 //TO DO
-                if (k.getCode() == KeyCode.SPACE) {
+                if (k.getCode() == reversedBindActions.get(RotateMove.class)) {
                     rotatePressed.set(true);
                     model.canPlace = false;
                 }
-                if (k.getCode() == KeyCode.S) {
+                if (k.getCode() == reversedBindActions.get(DownMove.class)) {
                     downPressed.set(true);
                     model.canPlace = false;
                 }
-                if (k.getCode() == KeyCode.A) {
+                if (k.getCode() == reversedBindActions.get(LeftMove.class)) {
                     leftPressed.set(true);
                     model.canPlace = false;
                 }
-                if (k.getCode() == KeyCode.D) {
+                if (k.getCode() == reversedBindActions.get(RightMove.class)) {
                     rightPressed.set(true);
                     model.canPlace = false;
                 }
-                if (k.getCode() == KeyCode.W) {
+                if (k.getCode() == reversedBindActions.get(DropMove.class)) {
                     if (!dropPressed.get()) {
-                        model.modelTick(TetrisModel.MoveType.DROP);
+                        bindActions.get(k.getCode()).execute();
                         TetrisApp.view.paintBoard();
                         dropPressed.set(true);
                     }
@@ -118,16 +132,16 @@ public class GameView {
             @Override
             public void handle(KeyEvent k) {
                 //TO DO
-                if (k.getCode() == KeyCode.S) {
+                if (k.getCode() == reversedBindActions.get(DownMove.class)) {
                     downPressed.set(false);
                 }
-                if (k.getCode() == KeyCode.A) {
+                if (k.getCode() == reversedBindActions.get(LeftMove.class)) {
                     leftPressed.set(false);
                 }
-                if (k.getCode() == KeyCode.D) {
+                if (k.getCode() == reversedBindActions.get(RightMove.class)) {
                     rightPressed.set(false);
                 }
-                if (k.getCode() == KeyCode.W) {
+                if (k.getCode() == reversedBindActions.get(DropMove.class)) {
                     dropPressed.set(false);
                 }
             }
@@ -142,5 +156,31 @@ public class GameView {
                 timer.stop();
             }
         });
+    }
+
+    public void initializeMovesList() {
+        // Default settings (if else statement for checking if settings moves are null. If null, set moves list controls as this)
+        Pair<KeyCode, Moves> rotate = new Pair<>(KeyCode.W, new RotateMove(model));
+        Pair<KeyCode, Moves> left = new Pair<>(KeyCode.A, new LeftMove(model));
+        Pair<KeyCode, Moves> right = new Pair<>(KeyCode.D, new RightMove(model));
+        Pair<KeyCode, Moves> down = new Pair<>(KeyCode.S, new DownMove(model));
+        Pair<KeyCode, Moves> drop = new Pair<>(KeyCode.SPACE, new DropMove(model));
+        Pair<KeyCode, Moves> hold = new Pair<>(KeyCode.R, new HoldMove(model));
+
+        this.movesList.add(rotate);
+        this.movesList.add(left);
+        this.movesList.add(right);
+        this.movesList.add(down);
+        this.movesList.add(drop);
+        this.movesList.add(hold);
+    }
+
+    public void updateMovesBindings() {
+        bindActions.clear();
+        reversedBindActions.clear();
+        for (Pair<KeyCode, Moves> movesPair : movesList) {
+            bindActions.put(movesPair.getKey(), movesPair.getValue());
+            reversedBindActions.put(movesPair.getValue().getClass(), movesPair.getKey());
+        }
     }
 }
