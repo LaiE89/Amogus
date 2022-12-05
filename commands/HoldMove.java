@@ -3,9 +3,9 @@ package commands;
 import model.TetrisModel;
 
 public class HoldMove implements Moves{
-
     private TetrisModel model; // Receiver which knows how to perform the actions
     boolean isHoldPressed = false;
+
     public HoldMove (TetrisModel model) {
         this.model = model;
     }

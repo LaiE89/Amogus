@@ -72,6 +72,11 @@ public class GameView {
         });
     }
 
+    /**
+     * Takes in a hashmap and updates the moveBindings attribute according to the hashmap.
+     *
+     * @param newBindings a hashmap containing the move type as an integer and the new keycode binding for the move type
+     */
     public void updateMoveBindings(HashMap<Integer, KeyCode> newBindings) {
         moveBindings.clear();
         for (int moveType : newBindings.keySet()) {

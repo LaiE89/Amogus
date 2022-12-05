@@ -49,7 +49,7 @@ public class TetrisView {
     Canvas canvas;
     GraphicsContext gc; //the graphics context will be linked to the canvas
     protected Canvas holdPieceVisual;
-    GraphicsContext holdgc;
+    protected GraphicsContext holdgc;
 
     // Board Variables
     int pieceWidth = 20; //width of block on display
@@ -227,6 +227,9 @@ public class TetrisView {
         }
     }
 
+    /**
+     * Draw the hold piece visualizer
+     */
     public void paintHoldPiece() {
 
         holdgc.setStroke(Color.BLACK);

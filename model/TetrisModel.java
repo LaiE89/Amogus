@@ -169,7 +169,8 @@ public class TetrisModel implements Serializable {
                 }
                 break;
             case HOLD:
-                // If move is hold, then switch to new piece
+                // If hold piece queue is empty, just get next piece and push current piece into the queue.
+                // Otherwise, switch piece from queue with current piece
                 if (holdPiece.isEmpty()) {
                     holdPiece.add(newPiece);
                     newPiece = pickNextPiece();
