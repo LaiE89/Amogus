@@ -6,15 +6,12 @@ import model.TetrisApp;
 import model.TetrisBoard;
 import model.TetrisModel;
 import views.ConnectView;
-import views.MultiplayerView;
 import views.TetrisView;
 
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.IOException;
-import java.io.Serializable;
 import java.net.Socket;
-import java.util.ArrayList;
 import java.util.HashMap;
 
 public class Client extends Thread {
@@ -62,8 +59,8 @@ public class Client extends Thread {
                 while (!socket.isClosed()) {
                     // TODO There is a bug involving receiving garbage while the current block is falling. This causes the server to detect the client as a disconnect occasionally
                     if (receiveGarbageLines > 0 && model.currentY >= model.HEIGHT) {
-                        model.modelTick(TetrisModel.MoveType.GARBAGE);
-                        TetrisApp.view.paintBoard();
+                            model.modelTick(TetrisModel.MoveType.GARBAGE);
+                            TetrisApp.view.paintBoard();
                     }
                 }
             }

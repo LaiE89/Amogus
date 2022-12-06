@@ -3,14 +3,11 @@ package model;
 import javafx.application.Platform;
 import javafx.event.EventHandler;
 import javafx.stage.WindowEvent;
-import model.TetrisModel;
 import views.ConnectView;
 import views.TetrisView;
 
 import javafx.application.Application;
 import javafx.stage.Stage;
-
-import java.io.IOException;
 
 /** 
  * A Tetris Application, in JavaFX

@@ -74,7 +74,7 @@ public class MultiplayerView extends GameView{
     /**
      * Create the view to chat with players in the lobby
      */
-    private void createChatView(){
+    private void createChatView() {
         // TODO: Change LoadView class into a UI for chatting
     }
 }

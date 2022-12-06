@@ -361,16 +361,11 @@ public class TetrisBoard implements Serializable {
         if(highest + rows > TetrisModel.HEIGHT){ //if the # of rows added + max height exceeds board height, then board is filled
             return true;
         }*/
-
-        if (this.committed) {
-            boolean isLost = moveUp(rows);
-            fillGrid(rows);
-            randomHole(rows);
-            makeHeightAndWidthArrays();
-            return isLost;
-        }else {
-            throw new RuntimeException("Board must be committed before adding garbage");
-        }
+        boolean isLost = moveUp(rows);
+        fillGrid(rows);
+        randomHole(rows);
+        makeHeightAndWidthArrays();
+        return isLost;
     }
 
     /**

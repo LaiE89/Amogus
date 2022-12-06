@@ -4,6 +4,7 @@ import javafx.animation.Animation;
 import javafx.animation.AnimationTimer;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
+import javafx.application.Platform;
 import javafx.util.Duration;
 import multiplayer.Client;
 import views.ConnectView;
@@ -290,9 +291,14 @@ public class TetrisModel {
         boolean garbageOverflow = false;
         if (verb == MoveType.GARBAGE) {
             System.out.println("Placing garbage");
-            garbageOverflow = this.board.addGarbage(this.client.receiveGarbageLines);
-            this.client.receiveGarbageLines = 0;
-            if (this.isMultiplayer) this.client.sendPacket(this.client.numConnections, true,false, 0);
+            if (this.isMultiplayer) {
+                garbageOverflow = this.board.addGarbage(this.client.receiveGarbageLines);
+                this.client.receiveGarbageLines = 0;
+                this.client.sendPacket(this.client.numConnections, true, false, 0);
+            }else {
+                Random rand = new Random();
+                garbageOverflow = this.board.addGarbage(rand.nextInt(4)+1);
+            }
             this.board.commit();
         }
 
@@ -361,6 +367,9 @@ public class TetrisModel {
         }else { // If the game is a multiplayer game, tell the server that this player lost
             this.client.sendPacket(this.client.numConnections, true,true, 0);
             this.isMultiplayer = false;
+            Platform.runLater(() -> {
+                TetrisApp.view.gameView.createLostView();
+            });
         }
         gameOn = false;
     }
