@@ -13,6 +13,12 @@ import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.stage.Stage;
+import javafx.util.Duration;
+import model.TetrisPiece;
+import model.TetrisPoint;
+
+import java.util.ArrayList;
+import java.util.HashMap;
 import model.TetrisPoint;
 import java.util.HashMap;
 import javafx.scene.input.KeyCode;
@@ -31,6 +37,8 @@ public class TetrisView {
     Button singleplayerButton, chatButton, multiplayerButton, settingsButton; //buttons for functions
     Canvas canvas;
     GraphicsContext gc; //the graphics context will be linked to the canvas
+    protected Canvas holdPieceVisual;
+    protected GraphicsContext holdgc;
     protected Canvas opBoard1;
     protected Canvas opBoard2;
     protected Canvas opBoard3;
@@ -41,11 +49,13 @@ public class TetrisView {
     public double width; //height and width of canvas
     public double height;
 
+    // Controls
+    public HashMap<Integer, KeyCode> controlMap = new HashMap<>();
+
     // Scene References;
     public ConnectView connectView;
     public SettingsView settingsView;
     public GameView gameView;
-    public HashMap<Integer, KeyCode> controlMap = new HashMap<Integer, KeyCode>();
 
     // Instance reference for singleton
     private static TetrisView instance;
@@ -60,11 +70,15 @@ public class TetrisView {
     private TetrisView(TetrisModel model, Stage stage) {
         this.model = model;
         this.stage = stage;
-        controlMap.put(0, KeyCode.W); //0 IS DROP
-        controlMap.put(1, KeyCode.A); //1 is left
-        controlMap.put(2, KeyCode.D); //2 is right
-        controlMap.put(3, KeyCode.S); //3 is down
-        controlMap.put(4, KeyCode.SPACE); //4 is rotate
+
+        // Initializing control map. These are the default controls
+        controlMap.put(0, KeyCode.W); //0 represents drop
+        controlMap.put(1, KeyCode.A); //1 represents left
+        controlMap.put(2, KeyCode.D); //2 represents right
+        controlMap.put(3, KeyCode.S); //3 represents down
+        controlMap.put(4, KeyCode.SPACE); //4 represents rotate
+        controlMap.put(5, KeyCode.E); //5 represents hold
+
         initUI();
     }
 
@@ -168,6 +182,7 @@ public class TetrisView {
      * Draw the board
      */
     public void paintBoard() {
+
         gc.setStroke(Color.BLACK);
         gc.setFill(Color.BLACK);
         gc.fillRect(0, 0, this.width-1, this.height-1);
@@ -202,6 +217,31 @@ public class TetrisView {
                     gc.fillRect(left+1, yPixel(y)+1, dx, dy);
                     gc.setFill(Color.BLACK);
                 }
+            }
+        }
+    }
+
+    /**
+<<<<<<< HEAD
+     * Draw the hold piece visualizer
+     */
+    public void paintHoldPiece() {
+
+        holdgc.setStroke(Color.BLACK);
+        holdgc.setFill(Color.BLACK);
+        holdgc.fillRect(0, 0, 4 * pieceWidth + 2, 6 * pieceWidth + 2);
+
+        float dX = (float) (4 * pieceWidth + 2 - 2) / 4;
+        float dY = (float) (4 * pieceWidth + 2 - 2) / 4;
+        final int dx = Math.round(dX - 2);
+        final int dy = Math.round(dY - 2);
+
+        if (!this.model.holdPiece.isEmpty()) {
+            TetrisPiece holdPiece = this.model.holdPiece.get(0);
+            for (TetrisPoint point : holdPiece.getBody()) {
+                holdgc.setFill(holdPiece.getColor());
+                holdgc.fillRect((int) Math.round((point.x) * dX) + 1, (int) Math.round(4 * pieceWidth + 2 - 1 - (point.y + 1) * dY) + 1, dx, dy);
+                holdgc.setFill(Color.BLACK);
             }
         }
     }
@@ -293,6 +333,11 @@ public class TetrisView {
         canvas = new Canvas(this.width, this.height);
         canvas.setId("Canvas");
         gc = canvas.getGraphicsContext2D();
+
+        holdPieceVisual = new Canvas(4*pieceWidth + 2, 4*pieceWidth + 2);
+        holdPieceVisual.setId("HoldPieceVisual");
+        holdgc = holdPieceVisual.getGraphicsContext2D();
+
         gameView = new SinglePlayerView();
     }
 
@@ -304,6 +349,11 @@ public class TetrisView {
         canvas = new Canvas(this.width, this.height);
         canvas.setId("Canvas");
         gc = canvas.getGraphicsContext2D();
+
+        holdPieceVisual = new Canvas(4*pieceWidth + 2, 4*pieceWidth + 2);
+        holdPieceVisual.setId("HoldPieceVisual");
+        holdgc = holdPieceVisual.getGraphicsContext2D();
+
         gameView = new MultiplayerView();
     }
 

@@ -1,8 +1,13 @@
 package model;
 
+import javafx.animation.Animation;
+import javafx.animation.AnimationTimer;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
+import javafx.util.Duration;
 import multiplayer.Client;
 import views.ConnectView;
-import java.io.*;
+import java.util.*;
 import java.util.Random;
 
 /** Represents a Tetris Model for Tetris.  
@@ -28,6 +33,7 @@ public class TetrisModel {
     protected int newY;
     public int floorY; // y-value that the piece will fall to
     public boolean canPlace = true;
+    public LinkedList<TetrisPiece> holdPiece = new LinkedList<>();
     public TetriminoPool piecePool;
 
     // State of the game variables
@@ -37,12 +43,21 @@ public class TetrisModel {
     boolean isMultiplayer = false;
     public Client client;
 
+    // Controls
+    public AnimationTimer controlsTimer;
+    public Timeline downTimeline = new Timeline();
+    public boolean isLeftPressed = false;
+    public boolean isRightPressed = false;
+    public boolean isDownPressed = false;
+    private long lastUpdate = 0;
+
     public enum MoveType {
         ROTATE,
         LEFT,
         RIGHT,
         DROP,
         DOWN,
+        HOLD,
         GARBAGE
     }
 
@@ -53,6 +68,36 @@ public class TetrisModel {
         board = new TetrisBoard(WIDTH, HEIGHT + BUFFERZONE);
         piecePool = new TetriminoPool();
         gameOn = false;
+
+        // Creating new animation timer for controls
+        controlsTimer = new AnimationTimer() {
+            @Override
+            public void handle(long now) {
+                if (now - lastUpdate >= 80_000_000) { // Prevent this loop from occurring more than once every 80 milliseconds
+                    if (isDownPressed) {
+                        if (downTimeline.getStatus() != Animation.Status.RUNNING) {
+                            downTimeline = new Timeline(new KeyFrame(Duration.seconds(0.5), e -> {
+                                modelTick(TetrisModel.MoveType.DOWN);
+                                TetrisApp.view.paintBoard();
+                            }));
+                            downTimeline.setCycleCount(Timeline.INDEFINITE);
+                            downTimeline.play();
+                        }else {
+                            downTimeline.setRate(10);
+                        }
+                    }
+                    if (isRightPressed) {
+                        modelTick(TetrisModel.MoveType.RIGHT);
+                        TetrisApp.view.paintBoard();
+                    }
+                    if (isLeftPressed) {
+                        modelTick(TetrisModel.MoveType.LEFT);
+                        TetrisApp.view.paintBoard();
+                    }
+                    lastUpdate = now;
+                }
+            }
+        };
     }
 
 
@@ -64,7 +109,11 @@ public class TetrisModel {
         gameOn = true;
         score = 0;
         count = 0;
-        TetrisApp.view.paintBoard();
+        holdPiece.clear();
+        if (TetrisApp.view != null) {
+            TetrisApp.view.paintBoard();
+            TetrisApp.view.paintHoldPiece();
+        }
 
         // Check if current game is multiplayer
         if (ConnectView.client != null && ConnectView.client.isGameStarted) {
@@ -117,6 +166,19 @@ public class TetrisModel {
                 if (newY > currentY) { //piece can't move up!
                     newY = currentY;
                 }
+                break;
+            case HOLD:
+                // If hold piece queue is empty, just get next piece and push current piece into the queue.
+                // Otherwise, switch piece from queue with current piece
+                if (holdPiece.isEmpty()) {
+                    holdPiece.add(newPiece);
+                    newPiece = pickNextPiece();
+                }else {
+                    TetrisPiece oldPiece = holdPiece.pop();
+                    holdPiece.add(newPiece);
+                    newPiece = oldPiece;
+                }
+                if (TetrisApp.view != null) TetrisApp.view.paintHoldPiece();
                 break;
             case GARBAGE:
                 break;
@@ -248,7 +310,7 @@ public class TetrisModel {
 
         // If move is drop, instantly place piece and add new piece
         if ((canPlace && failed && verb == MoveType.DOWN) || verb == MoveType.DROP) {    // if it's out of bounds due to falling
-            TetrisApp.view.gameView.timeline.stop();
+            this.downTimeline.stop();
             int cleared = board.clearRows();
             if (cleared > 0 && this.isMultiplayer) {
                 switch (cleared) {
@@ -294,8 +356,8 @@ public class TetrisModel {
         // If the game is a multiplayer game, just exit the game and go to main menu
         if (!isMultiplayer) {
             TetrisApp.view.initUI();
-            TetrisApp.view.gameView.timer.stop();
-            TetrisApp.view.gameView.timeline.stop();
+            this.controlsTimer.stop();
+            this.downTimeline.stop();
         }else { // If the game is a multiplayer game, tell the server that this player lost
             this.client.sendPacket(this.client.numConnections, true,true, 0);
             this.isMultiplayer = false;

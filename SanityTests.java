@@ -1,9 +1,14 @@
+import commands.HoldMove;
+import commands.LeftMove;
+import commands.Moves;
+import model.TetrisModel;
 import model.TetriminoPool;
 import model.TetrisPiece;
 import model.TetrisBoard;
 
 import model.TetrisPoint;
 import org.junit.jupiter.api.Test;
+import views.GameView;
 import pieces.IBlock;
 import pieces.TetriminoFactory;
 
@@ -522,6 +527,17 @@ public class SanityTests {
     }
 
     @Test
+    void holdPieceTest() {
+        TetrisModel model = new TetrisModel();
+        model.startGame();
+        assertTrue(model.holdPiece.size() == 0);
+        Moves holdMove = new HoldMove(model);
+        holdMove.execute();
+        assertTrue(model.holdPiece.size() == 1);
+        holdMove.execute();
+        assertTrue(model.holdPiece.size() == 1);
+    }
+
     void PoolingTest() {
         TetrisBoard board = new TetrisBoard(5, 12);
         board.commit();
@@ -549,6 +565,7 @@ public class SanityTests {
         piece2 = (IBlock) IBlock.makeFastRotations(piece2);
         System.out.println(piece2.fastRotation().fastRotation());
     }
+
     @Test
     void tetriminoFactory(){
         TetriminoFactory factory = new TetriminoFactory();

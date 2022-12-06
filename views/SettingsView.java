@@ -38,7 +38,7 @@ public class SettingsView {
     private Button rightControl;
     private Button downControl;
     private Button dropControl;
-
+    private Button holdControl;
     /**
      * Constructor
      */
@@ -171,8 +171,17 @@ public class SettingsView {
         downControlBox.setAlignment(Pos.CENTER_RIGHT);
         downControl.setFocusTraversable(false);
 
+        Label holdLabel = new Label("HOLD");
+        holdLabel.setFont(new Font(20));
+        holdLabel.setTextFill(Color.WHITE);
+
+        holdControl = new Button("E");
+        HBox holdControlBox = new HBox(20, holdLabel, holdControl);
+        holdControlBox.setAlignment(Pos.CENTER_RIGHT);
+        holdControl.setFocusTraversable(false);
+
         //vbox containing all control settings
-        VBox controlSettings = new VBox(20, controlSettingsLabel, dropControlBox,rotateControlBox, leftControlBox, rightControlBox, downControlBox);
+        VBox controlSettings = new VBox(20, controlSettingsLabel, dropControlBox,rotateControlBox, leftControlBox, rightControlBox, downControlBox, holdControlBox);
         controlSettings.setPadding(new Insets(20, 20, 20, 20));
         controlSettings.setAlignment(Pos.CENTER);
 
@@ -241,6 +250,12 @@ public class SettingsView {
                 borderPane.setOnKeyReleased(null);
             });
         });
+        holdControl.setOnAction(e -> {
+            borderPane.setOnKeyReleased(c -> {
+                adjustControls(holdControl, c.getCode(), 5);
+                borderPane.setOnKeyReleased(null);
+            });
+        });
         borderPane = new BorderPane();
         borderPane.setCenter(settings);
         borderPane.setStyle("-fx-background-color: " + backgroundColor);
@@ -296,6 +311,7 @@ public class SettingsView {
             TetrisApp.view.controlMap.put(moveType, newKey);
         }
     }
+
     public void updateSettingsView(){
         brightnessSlider.setValue(brightness + 0.5);
         saturationSlider.setValue(saturation + 0.5);
@@ -305,6 +321,7 @@ public class SettingsView {
         rightControl.setText(TetrisApp.view.controlMap.get(2).toString());
         downControl.setText(TetrisApp.view.controlMap.get(3).toString());
         rotateControl.setText(TetrisApp.view.controlMap.get(4).toString());
+        holdControl.setText(TetrisApp.view.controlMap.get(5).toString());
     }
 }
 
