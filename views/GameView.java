@@ -32,12 +32,18 @@ public class GameView {
     BooleanBinding anyPressed = downPressed.or(rightPressed).or(leftPressed).or(rotatePressed);
 
     // Reference to TetrisView variables
-    protected BorderPane borderPane;
+    public BorderPane borderPane;
     protected Stage stage;
     protected Canvas canvas;
     protected GraphicsContext gc;
     protected TetrisModel model;
 
+    //variables for controls
+    KeyCode drop = KeyCode.W;
+    KeyCode left = KeyCode.A;
+    KeyCode right = KeyCode.D;
+    KeyCode down = KeyCode.S;
+    KeyCode rotate = KeyCode.SPACE;
     public GameView () {
         borderPane = new BorderPane();
         model = TetrisApp.view.model;
@@ -52,23 +58,24 @@ public class GameView {
             @Override
             public void handle(KeyEvent k) {
                 //TO DO
-                if (k.getCode() == KeyCode.SPACE) {
+                if (k.getCode() == TetrisApp.view.controlMap.get(4)) {
                     rotatePressed.set(true);
                     model.canPlace = false;
+                    //System.out.println("Rotated Pressed? " + rotatePressed.get() + ", Timer Started? " + timer.toString());
                 }
-                if (k.getCode() == KeyCode.S) {
+                if (k.getCode() == TetrisApp.view.controlMap.get(3)) {
                     downPressed.set(true);
                     model.canPlace = false;
                 }
-                if (k.getCode() == KeyCode.A) {
+                if (k.getCode() == TetrisApp.view.controlMap.get(1)) {
                     leftPressed.set(true);
                     model.canPlace = false;
                 }
-                if (k.getCode() == KeyCode.D) {
+                if (k.getCode() == TetrisApp.view.controlMap.get(2)) {
                     rightPressed.set(true);
                     model.canPlace = false;
                 }
-                if (k.getCode() == KeyCode.W) {
+                if (k.getCode() == TetrisApp.view.controlMap.get(0)) {
                     if (!dropPressed.get()) {
                         model.modelTick(TetrisModel.MoveType.DROP);
                         TetrisApp.view.paintBoard();
@@ -118,16 +125,16 @@ public class GameView {
             @Override
             public void handle(KeyEvent k) {
                 //TO DO
-                if (k.getCode() == KeyCode.S) {
+                if (k.getCode() == TetrisApp.view.controlMap.get(3)) {
                     downPressed.set(false);
                 }
-                if (k.getCode() == KeyCode.A) {
+                if (k.getCode() == TetrisApp.view.controlMap.get(1)) {
                     leftPressed.set(false);
                 }
-                if (k.getCode() == KeyCode.D) {
+                if (k.getCode() == TetrisApp.view.controlMap.get(2)) {
                     rightPressed.set(false);
                 }
-                if (k.getCode() == KeyCode.W) {
+                if (k.getCode() == TetrisApp.view.controlMap.get(0)) {
                     dropPressed.set(false);
                 }
             }
