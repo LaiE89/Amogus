@@ -1,9 +1,5 @@
 package views;
 
-import javafx.scene.Group;
-import javafx.scene.shape.Line;
-import javafx.scene.shape.Rectangle;
-import model.TetrisApp;
 import model.TetrisBoard;
 import model.TetrisModel;
 import javafx.geometry.Insets;
@@ -18,6 +14,8 @@ import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.stage.Stage;
 import model.TetrisPoint;
+import java.util.HashMap;
+import javafx.scene.input.KeyCode;
 
 /**
  * Tetris View
@@ -47,6 +45,7 @@ public class TetrisView {
     public ConnectView connectView;
     public SettingsView settingsView;
     public GameView gameView;
+    public HashMap<Integer, KeyCode> controlMap = new HashMap<Integer, KeyCode>();
 
     // Instance reference for singleton
     private static TetrisView instance;
@@ -61,6 +60,11 @@ public class TetrisView {
     private TetrisView(TetrisModel model, Stage stage) {
         this.model = model;
         this.stage = stage;
+        controlMap.put(0, KeyCode.W); //0 IS DROP
+        controlMap.put(1, KeyCode.A); //1 is left
+        controlMap.put(2, KeyCode.D); //2 is right
+        controlMap.put(3, KeyCode.S); //3 is down
+        controlMap.put(4, KeyCode.SPACE); //4 is rotate
         initUI();
     }
 
