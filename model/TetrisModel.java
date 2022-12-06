@@ -15,11 +15,13 @@ import java.util.Random;
  */
 public class TetrisModel {
 
+    // Board variables
     public static final int WIDTH = 10; //size of the board in blocks
     public static final int HEIGHT = 20; //height of the board in blocks
     public static final int BUFFERZONE = 4; //space at the top
-
     protected TetrisBoard board;  // Board data structure
+
+    // Gameplay variables
     protected TetrisPiece[] pieces; // Pieces to be places on the board
     public TetrisPiece currentPiece; //Piece we are currently placing
     protected TetrisPiece newPiece; //next piece to be placed
@@ -32,10 +34,10 @@ public class TetrisModel {
     public int floorY; // y-value that the piece will fall to
     public boolean canPlace = true;
     public LinkedList<TetrisPiece> holdPiece = new LinkedList<>();
+    public TetriminoPool piecePool;
 
-    // State of the game
+    // State of the game variables
     public boolean gameOn;	// true if we are playing
-    protected Random random;	 // the random generator for new pieces
 
     // Multiplayer variables
     boolean isMultiplayer = false;
@@ -64,7 +66,7 @@ public class TetrisModel {
      */
     public TetrisModel() {
         board = new TetrisBoard(WIDTH, HEIGHT + BUFFERZONE);
-        pieces = TetrisPiece.getPieces(); //initialize board and pieces
+        piecePool = new TetriminoPool();
         gameOn = false;
 
         // Creating new animation timer for controls
@@ -118,6 +120,7 @@ public class TetrisModel {
             System.out.println("Game is multiplayer.");
             this.isMultiplayer = true;
             this.client = ConnectView.client;
+            this.client.sendPacket(this.client.numConnections, true,false, 0);
         }else {
             this.isMultiplayer = false;
         }
@@ -193,17 +196,22 @@ public class TetrisModel {
 
         // commit things the way they are
         board.commit();
+        piecePool.releaseTetrimino(currentPiece);
         currentPiece = null;
 
         TetrisPiece piece = pickNextPiece();
 
         // Center it up at the top
-        int px = (board.getWidth() - piece.getWidth())/2;
-        int py = board.getHeight() - 4;
-        int result = setCurrent(piece, px, py);
+        try {
+            int px = (board.getWidth() - piece.getWidth()) / 2;
+            int py = board.getHeight() - 4;
+            int result = setCurrent(piece, px, py);
 
-        if (result > TetrisBoard.ADD_ROW_FILLED) {
-            stopGame(); //oops, we lost.
+            if (result > TetrisBoard.ADD_ROW_FILLED) {
+                stopGame(); //oops, we lost.
+            }
+        }catch (Exception e) {
+            System.out.println("Tetrimino Failure: " + e.getMessage());
         }
         if (this.isMultiplayer) this.client.sendPacket(this.client.numConnections, true,false, 0);
     }
@@ -212,10 +220,7 @@ public class TetrisModel {
      * Pick next piece to put in play on board 
      */
     private TetrisPiece pickNextPiece() {
-        int pieceNum;
-        pieceNum = (int) (pieces.length * random.nextDouble());
-        TetrisPiece piece	 = pieces[pieceNum];
-        return(piece);
+        return piecePool.acquireTetrimino();
     }
 
     /**

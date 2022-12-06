@@ -9,12 +9,8 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
-import javafx.util.Pair;
 import model.TetrisApp;
 import model.TetrisModel;
-
-import java.security.Key;
-import java.util.ArrayList;
 import java.util.HashMap;
 
 public class GameView {
@@ -31,12 +27,6 @@ public class GameView {
     protected GraphicsContext holdgc;
     protected TetrisModel model;
 
-    //variables for controls
-    KeyCode drop = KeyCode.W;
-    KeyCode left = KeyCode.A;
-    KeyCode right = KeyCode.D;
-    KeyCode down = KeyCode.S;
-    KeyCode rotate = KeyCode.SPACE;
     public GameView () {
         borderPane = new BorderPane();
         model = TetrisApp.view.model;
@@ -48,6 +38,7 @@ public class GameView {
         stage.setTitle("CSC207 Tetris");
 
         updateMoveBindings(TetrisApp.view.controlMap);
+        System.out.println(moveBindings.toString());
 
         // Detecting controls press
         borderPane.setOnKeyPressed(new EventHandler<KeyEvent>() {
@@ -57,6 +48,7 @@ public class GameView {
                 for (KeyCode i : moveBindings.keySet()) {
                     if (k.getCode() == i) {
                         moveBindings.get(i).execute();
+                        TetrisApp.view.paintBoard();
                     }
                 }
             }
