@@ -1,6 +1,10 @@
 package views;
 
+import javafx.animation.Animation;
+import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -9,12 +13,25 @@ import javafx.scene.control.Slider;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
+import javafx.util.Duration;
+
+import java.util.Random;
 
 public class SinglePlayerView extends GameView{
     
     private Timeline garbageTimeline;
     public SinglePlayerView() {
         super();
+
+        garbageTimeline = new Timeline(
+                new KeyFrame(Duration.seconds(1), e -> {
+                    Random rand = new Random();
+                    int randRow = rand.nextInt(4)+1;
+                    this.model.getBoard().addGarbage(randRow);
+                }));
+        garbageTimeline.setRate(10);
+        garbageTimeline.setCycleCount(Timeline.INDEFINITE);
+        garbageTimeline.play();
 
         Slider addGarbageSpeed = new Slider(0, 100, 50);
         addGarbageSpeed.setShowTickLabels(true);
@@ -25,8 +42,7 @@ public class SinglePlayerView extends GameView{
         garbageSpeedLabel.setTextFill(Color.WHITE);
 
         addGarbageSpeed.setOnMouseReleased(e -> {
-            double rateMultiplier = addGarbageSpeed.getValue() * 0.03;
-            adjustGarbageSpeed(rateMultiplier);
+            adjustGarbageSpeed(addGarbageSpeed.getValue());
         });
 
         VBox botBox = new VBox(20, garbageSpeedLabel, addGarbageSpeed);
@@ -43,8 +59,8 @@ public class SinglePlayerView extends GameView{
     }
 
     private void adjustGarbageSpeed(double newRate) {
-        // TODO
-        //this.garbageTimeline.setRate(newRate);
-        //this.borderPane.requestFocus();
+        double rateMulti = newRate * 0.03;
+        this.garbageTimeline.setRate(rateMulti);
+        this.borderPane.requestFocus();
     }
 }
