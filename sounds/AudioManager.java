@@ -15,20 +15,16 @@ public class AudioManager {
     private static AudioInputStream audioInputStream;
     private static Clip clip;
     public static Boolean running;
+    private static Clip[] clips;
 
     //private constructor
     private AudioManager(){
-        try{
-            AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(new File("./resources/Tetris.wav").getAbsoluteFile());
-            clip = AudioSystem.getClip();
-            clip.open(audioInputStream);
-            clip.start();
-            clip.loop(Clip.LOOP_CONTINUOUSLY);
-            running = true;
-        }
-        catch(Exception e){
-            System.out.println(e.getMessage());
-        }
+        loadSounds();
+        clip.start();
+        clip.loop(Clip.LOOP_CONTINUOUSLY);
+        running = true;
+        clips = new Clip[]{clip};
+
     }
     public static AudioManager getInstance(){
         if(audio==null){
@@ -49,5 +45,15 @@ public class AudioManager {
     }
     public static void setVolume(int newVolume){
         volume = newVolume;
+    }
+    private static void loadSounds(){
+        try{
+            AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(new File("./resources/Tetris.wav").getAbsoluteFile());
+            clip = AudioSystem.getClip();
+            clip.open(audioInputStream);
+        }
+        catch(Exception e){
+            System.out.println(e.getMessage());
+        }
     }
 }
