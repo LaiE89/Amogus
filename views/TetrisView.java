@@ -17,6 +17,7 @@ import model.TetrisPiece;
 import model.TetrisPoint;
 import java.util.HashMap;
 import javafx.scene.input.KeyCode;
+import sounds.AudioManager;
 
 /**
  * Tetris View
@@ -54,6 +55,7 @@ public class TetrisView {
 
     // Instance reference for singleton
     private static TetrisView instance;
+    public AudioManager audioManager;
 
     /**
      * Constructor
@@ -65,7 +67,7 @@ public class TetrisView {
     private TetrisView(TetrisModel model, Stage stage) {
         this.model = model;
         this.stage = stage;
-
+        audioManager = AudioManager.getInstance();
         // Initializing control map. These are the default controls
         controlMap.put(0, KeyCode.W); //0 represents drop
         controlMap.put(1, KeyCode.A); //1 represents left

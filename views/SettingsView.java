@@ -13,6 +13,7 @@ import javafx.scene.text.Font;
 import javafx.stage.Stage;
 import model.TetrisApp;
 import javafx.scene.input.KeyCode;
+import sounds.AudioManager;
 
 public class SettingsView {
 
@@ -93,6 +94,22 @@ public class SettingsView {
         volumeLabel.setFont(new Font(20));
         volumeLabel.setTextFill(Color.WHITE);
 
+        //music toggle button
+        Button musicToggle = new Button("On");
+        if(!AudioManager.running){
+            musicToggle.setText("Off");
+        }
+        musicToggle.setId("musicToggle");
+        musicToggle.setPrefSize(150, 50);
+        musicToggle.setFont(new Font(12));
+        musicToggle.setStyle("-fx-background-color: #17871b; -fx-text-fill: white;");
+        musicToggle.setFocusTraversable(false);
+
+        //music toggle label
+        Label musicToggleLabel = new Label("Background Music");
+        musicToggleLabel.setFont(new Font(20));
+        musicToggleLabel.setTextFill(Color.WHITE);
+
         // Background color selector
         backGroundColorBox = new ComboBox<>();
         backGroundColorBox.getItems().addAll("Default","Red", "Blue", "Green", "Yellow", "Black", "White");
@@ -115,7 +132,7 @@ public class SettingsView {
         // vbox containing all visual settings
         VBox visualSettings = new VBox(20, backButton, brightnessLabel,
                 brightnessSlider, saturationLabel, saturationSlider, contrastLabel,
-                contrastSlider, volumeLabel, volumeSlider, colorChange);
+                contrastSlider, musicToggleLabel, musicToggle, colorChange);
         visualSettings.setPadding(new Insets(20, 20, 20, 20));
         visualSettings.setAlignment(Pos.CENTER);
 
@@ -210,6 +227,16 @@ public class SettingsView {
         });
 
         volumeLabel.setOnMouseReleased(e -> {
+        });
+
+        musicToggle.setOnAction(e -> {
+            AudioManager.toggleAudio();
+            if(AudioManager.running){
+                musicToggle.setText("On");
+            }
+            else{
+                musicToggle.setText("Off");
+            }
         });
 
         backGroundColorBox.setOnAction(e -> {
