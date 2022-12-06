@@ -1,9 +1,18 @@
+import commands.HoldMove;
+import commands.LeftMove;
+import commands.Moves;
+import model.TetrisModel;
+import model.TetriminoPool;
 import model.TetrisPiece;
 import model.TetrisBoard;
 
 import model.TetrisPoint;
 import org.junit.jupiter.api.Test;
+import views.GameView;
+import pieces.IBlock;
+import pieces.TetriminoFactory;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -472,7 +481,7 @@ public class SanityTests {
     }
     @Test
     void addGarbageTest(){
-        TetrisBoard board = new TetrisBoard(8, 12); board.commit();
+        TetrisBoard board = new TetrisBoard(8, 24); board.commit();
         TetrisPiece piece = new TetrisPiece(TetrisPiece.S1_STR);
         board.placePiece(piece,0, 0); board.commit();
         System.out.println(board.addGarbage(10));
@@ -487,7 +496,7 @@ public class SanityTests {
     }
     @Test
     void randomHoleTest(){
-        TetrisBoard board = new TetrisBoard(4, 12);board.commit();
+        TetrisBoard board = new TetrisBoard(4, 24);board.commit();
         TetrisPiece piece = new TetrisPiece(TetrisPiece.STICK_STR);
         piece = piece.computeNextRotation();
         board.placePiece(piece, 0 ,0 ); board.commit();
@@ -504,7 +513,7 @@ public class SanityTests {
     }
     @Test
     void randomHoleTest2(){
-        TetrisBoard board = new TetrisBoard(2, 12);board.commit();
+        TetrisBoard board = new TetrisBoard(2, 24);board.commit();
         board.addGarbage(3);
         board.randomHole(3);
         System.out.println(board);
@@ -515,5 +524,56 @@ public class SanityTests {
         for(int i = 0; i < board.getHeight(); i++){
             System.out.print(board.getRowWidth(i) + " ");
         }
+    }
+
+    @Test
+    void holdPieceTest() {
+        TetrisModel model = new TetrisModel();
+        model.startGame();
+        assertTrue(model.holdPiece.size() == 0);
+        Moves holdMove = new HoldMove(model);
+        holdMove.execute();
+        assertTrue(model.holdPiece.size() == 1);
+        holdMove.execute();
+        assertTrue(model.holdPiece.size() == 1);
+    }
+
+    void PoolingTest() {
+        TetrisBoard board = new TetrisBoard(5, 12);
+        board.commit();
+        TetriminoPool pool = new TetriminoPool();
+        ArrayList<TetrisPiece> originalPool = new ArrayList<>(pool.getTetriminoPool());
+        TetrisPiece newPiece = pool.acquireTetrimino();
+        assertTrue(pool.getTetriminoPool().size() < originalPool.size());
+        board.placePiece(newPiece, 0, 0);
+        System.out.println(board);
+        pool.releaseTetrimino(newPiece);
+        assertTrue(originalPool.size() == pool.getTetriminoPool().size());
+    }
+
+    @Test
+    void tetriminoValues(){
+        TetrisPiece piece = new TetrisPiece(TetrisPiece.STICK_STR);
+        IBlock piece2 = new IBlock();
+        assertTrue(piece.getHeight() == piece2.getHeight());
+        assertTrue(piece.getWidth() == piece2.getWidth());
+    }
+    @Test
+    void tetriminoComparison(){
+        TetrisPiece piece = new TetrisPiece(TetrisPiece.STICK_STR);
+        IBlock piece2 = new IBlock();
+        piece2 = (IBlock) IBlock.makeFastRotations(piece2);
+        System.out.println(piece2.fastRotation().fastRotation());
+    }
+
+    @Test
+    void tetriminoFactory(){
+        TetriminoFactory factory = new TetriminoFactory();
+        TetrisPiece piece1 = factory.getTetrimino("IBLOCK");
+        piece1 = piece1.fastRotation();
+
+        TetrisBoard board = new TetrisBoard(8,12);board.commit();
+        board.placePiece(piece1, 0, 0);board.commit();
+        System.out.println(board);
     }
 }

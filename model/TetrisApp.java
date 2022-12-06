@@ -5,6 +5,7 @@ import javafx.event.EventHandler;
 import javafx.stage.WindowEvent;
 import model.TetrisModel;
 import views.ConnectView;
+import views.SinglePlayerView;
 import views.TetrisView;
 
 import javafx.application.Application;
