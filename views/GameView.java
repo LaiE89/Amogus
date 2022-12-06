@@ -3,14 +3,20 @@ package views;
 import commands.*;
 
 import javafx.event.EventHandler;
+import javafx.scene.Group;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
 import model.TetrisApp;
 import model.TetrisModel;
+
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.util.HashMap;
 
 public class GameView {
@@ -97,6 +103,31 @@ public class GameView {
                 default:
                     break;
             }
+        }
+    }
+
+    public void createLostView() {
+        try {
+            Image image = new Image(new FileInputStream("./resources/gameover.png"));
+            ImageView imageView = new ImageView(image);
+            imageView.setX(50);
+            imageView.setY(25);
+
+            //setting the fit height and width of the image view
+            imageView.setFitHeight(455);
+            imageView.setFitWidth(500);
+
+            //Setting the preserve ratio of the image view
+            imageView.setPreserveRatio(true);
+
+            imageView.setPreserveRatio(true);
+
+            //Creating a Group object
+            Group root = new Group(imageView);
+            root.toFront();
+            borderPane.setCenter(root);
+        }catch (IOException e) {
+            System.out.println("Cannot find image: " + e.getMessage());
         }
     }
 }

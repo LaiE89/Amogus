@@ -1,6 +1,5 @@
 package views;
 
-import javafx.scene.image.Image;
 import model.TetrisBoard;
 import model.TetrisModel;
 import javafx.geometry.Insets;
@@ -14,14 +13,7 @@ import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.stage.Stage;
-import javafx.util.Duration;
 import model.TetrisPiece;
-import model.TetrisPoint;
-
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
 import model.TetrisPoint;
 import java.util.HashMap;
 import javafx.scene.input.KeyCode;
@@ -42,10 +34,10 @@ public class TetrisView {
     GraphicsContext gc; //the graphics context will be linked to the canvas
     protected Canvas holdPieceVisual;
     protected GraphicsContext holdgc;
-    protected Canvas opBoard1;
-    protected Canvas opBoard2;
-    protected Canvas opBoard3;
-    protected Canvas opBoard4;
+    protected Canvas opBoard1 = new Canvas();
+    protected Canvas opBoard2 = new Canvas();
+    protected Canvas opBoard3 = new Canvas();
+    protected Canvas opBoard4 = new Canvas();
 
     // Board Variables
     int pieceWidth = 20; //width of block on display

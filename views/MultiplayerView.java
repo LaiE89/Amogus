@@ -74,34 +74,7 @@ public class MultiplayerView extends GameView{
     /**
      * Create the view to chat with players in the lobby
      */
-    private void createChatView(){
+    private void createChatView() {
         // TODO: Change LoadView class into a UI for chatting
-    }
-
-    public void createLostView() {
-        try {
-            Image image = new Image(new FileInputStream("./resources/gameover.png"));
-            ImageView imageView = new ImageView(image);
-            imageView.setX(50);
-            imageView.setY(25);
-
-            //setting the fit height and width of the image view
-            imageView.setFitHeight(455);
-            imageView.setFitWidth(500);
-
-            //Setting the preserve ratio of the image view
-            imageView.setPreserveRatio(true);
-
-            imageView.setPreserveRatio(true);
-
-            //Creating a Group object
-            Group root = new Group(imageView);
-
-            //Creating a scene object
-            Scene scene = new Scene(root, 600, 500);
-            borderPane.
-        }catch (IOException e) {
-            System.out.println("Cannot find image: " + e.getMessage());
-        }
     }
 }

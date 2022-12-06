@@ -6,15 +6,12 @@ import model.TetrisApp;
 import model.TetrisBoard;
 import model.TetrisModel;
 import views.ConnectView;
-import views.MultiplayerView;
 import views.TetrisView;
 
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.IOException;
-import java.io.Serializable;
 import java.net.Socket;
-import java.util.ArrayList;
 import java.util.HashMap;
 
 public class Client extends Thread {
