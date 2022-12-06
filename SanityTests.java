@@ -3,6 +3,8 @@ import model.TetrisBoard;
 
 import model.TetrisPoint;
 import org.junit.jupiter.api.Test;
+import pieces.IBlock;
+import pieces.TetriminoFactory;
 
 import java.util.Arrays;
 
@@ -515,5 +517,29 @@ public class SanityTests {
         for(int i = 0; i < board.getHeight(); i++){
             System.out.print(board.getRowWidth(i) + " ");
         }
+    }
+    @Test
+    void tetriminoValues(){
+        TetrisPiece piece = new TetrisPiece(TetrisPiece.STICK_STR);
+        IBlock piece2 = new IBlock();
+        assertTrue(piece.getHeight() == piece2.getHeight());
+        assertTrue(piece.getWidth() == piece2.getWidth());
+    }
+    @Test
+    void tetriminoComparison(){
+        TetrisPiece piece = new TetrisPiece(TetrisPiece.STICK_STR);
+        IBlock piece2 = new IBlock();
+        piece2 = (IBlock) IBlock.makeFastRotations(piece2);
+        System.out.println(piece2.fastRotation().fastRotation());
+    }
+    @Test
+    void tetriminoFactory(){
+        TetriminoFactory factory = new TetriminoFactory();
+        TetrisPiece piece1 = factory.getTetrimino("IBLOCK");
+        piece1 = piece1.fastRotation();
+
+        TetrisBoard board = new TetrisBoard(8,12);board.commit();
+        board.placePiece(piece1, 0, 0);board.commit();
+        System.out.println(board);
     }
 }
