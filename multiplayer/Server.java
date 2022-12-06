@@ -1,5 +1,6 @@
 package multiplayer;
 
+import model.TetrisBoard;
 import views.ConnectView;
 import views.TetrisView;
 import java.io.ObjectInputStream;
@@ -7,7 +8,6 @@ import java.io.ObjectOutputStream;
 import java.io.IOException;
 import java.net.*;
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class Server extends Thread{
 
@@ -16,9 +16,9 @@ public class Server extends Thread{
     public ServerSocket serverSocket;
     public HashMap<Socket, ObjectInputStream> serverDis = new HashMap<>(); // Receives data from all clients
     public HashMap<Socket, ObjectOutputStream> serverDos = new HashMap<>(); // Sends data to all clients
-    List<Socket> clientSockets = new ArrayList<>();
-    private int clientReadTime = 1000;
-    public Object lock = new Object(); // A monitor lock. Ensures synchronization when accessing <clientSockets>
+    HashMap<Socket, Boolean> clientSockets = new HashMap<>();
+    private int clientReadTime = 250; // Determines how fast the server receives info from clients. Lower = faster. This is in ms, so 1000 = 1 second.
+    public final Object lock = new Object(); // A monitor lock. Ensures synchronization when accessing <clientSockets>
     public int numConnections = 0;
     public boolean isGameStarted = false;
     public int numGameOvers = 0;
@@ -91,10 +91,10 @@ public class Server extends Thread{
             serverDos.put(clientSocket, new ObjectOutputStream(clientSocket.getOutputStream()));
             serverDis.put(clientSocket, new ObjectInputStream(clientSocket.getInputStream()));
             clientSocket.setSoTimeout(clientReadTime);
-            clientSockets.add(clientSocket);
+            clientSockets.put(clientSocket, true);
             numConnections = clientSockets.size();
-            sendPacket(numConnections, isGameStarted, false);
-            System.out.println("CLIENT WITH LOCAL ADDRESS: " + clientSocket.getRemoteSocketAddress() + ", HAS REQUESTED TO JOIN. THE CURRENT SERVER LIST OF SIZE " + numConnections + " IS: " + clientSockets.stream().map(Object::toString).collect(Collectors.joining(", ")));
+            sendPacket(serverSocket.getLocalPort(), numConnections, isGameStarted, false, 0, null);
+            System.out.println("CLIENT WITH IP: " + clientSocket.getInetAddress() + ", AND PORT: " + clientSocket.getPort() + ", HAS REQUESTED TO JOIN. THE CURRENT SERVER LIST SIZE: " + numConnections);
         }catch (IOException e) {
             System.out.println(e.getMessage());
         }
@@ -119,18 +119,54 @@ public class Server extends Thread{
     /**
      * Sends a packet of data to all clients.
      *
+     * @param sender the port number of the client that sent this data
      * @param numConnections the number of current connections
      * @param isGameStarted true if the lobby has started the game
      * @param isGameOver true if the current client has lost (the current client's board is full)
+     * @param sendGarbageLines the quantity of garbage lines that the sender is sending
+     * @param senderBoard the board of the client that sent this data
      */
-    public void sendPacket(int numConnections, boolean isGameStarted, boolean isGameOver) {
-        for (Socket socket : clientSockets) {
+    public void sendPacket(int sender, int numConnections, boolean isGameStarted, boolean isGameOver, int sendGarbageLines, TetrisBoard senderBoard) {
+        for (Socket socket : clientSockets.keySet()) {
             try {
-                Packet packet = new Packet(numConnections, isGameStarted, isGameOver);
+                Packet packet = new Packet(sender, numConnections, isGameStarted, isGameOver, sendGarbageLines, senderBoard);
                 serverDos.get(socket).writeObject(packet);
                 serverDos.get(socket).flush();
             }catch (IOException e) {
-                System.out.println(e.getMessage());
+                System.out.println("Error in sendPacket(): " + e.getMessage());
+            }
+        }
+    }
+
+    /**
+     * Sends a packet of data to a random client.
+     *
+     * @param sender the socket of the client that sent this data
+     * @param numConnections the number of current connections
+     * @param isGameStarted true if the lobby has started the game
+     * @param isGameOver true if the current client has lost (the current client's board is full)
+     * @param sendGarbageLines the quantity of garbage lines that will be sent to the random client
+     */
+    public void sendPacketToRandomClient(Socket sender, int numConnections, boolean isGameStarted, boolean isGameOver, int sendGarbageLines) {
+        HashMap<Socket, Boolean> clientsCopy;
+        synchronized (lock) {
+            clientsCopy = new HashMap<>(clientSockets);
+            clientsCopy.remove(sender);
+            for (Socket socket : clientSockets.keySet()) {
+                if (clientsCopy.containsKey(socket) && !clientsCopy.get(socket)) {
+                    clientsCopy.remove(socket);
+                }
+            }
+        }
+        if (clientsCopy.size() > 0) {
+            int index = (int) (Math.random() * clientsCopy.size());
+            try {
+                System.out.println("Sending " + sendGarbageLines + " lines of garbage to " + clientsCopy.keySet().toArray()[index]);
+                Packet packet = new Packet(sender.getPort(), numConnections, isGameStarted, isGameOver, sendGarbageLines, null);
+                serverDos.get(clientsCopy.keySet().toArray()[index]).writeObject(packet);
+                serverDos.get(clientsCopy.keySet().toArray()[index]).flush();
+            } catch (IOException e) {
+                System.out.println("Failed to send packet to random client: " + e.getMessage());
             }
         }
     }
@@ -142,19 +178,30 @@ public class Server extends Thread{
     public void receivePacket() {
         List<Socket> clientsCopy;
         synchronized (lock) {
-            clientsCopy = new ArrayList<>(clientSockets);
+            clientsCopy = new ArrayList<>(clientSockets.keySet());
         }
         for (Socket socket : clientsCopy) {
             try {
-                System.out.println("Receiving packet from: " + socket.getPort());
+                //System.out.println("Receiving packet from: " + socket.getPort());
                 Packet value = (Packet) serverDis.get(socket).readObject();
                 boolean isGameOver = value.getIsGameOver();
+                int sendGarbageLines = value.getSendGarbageLines();
+                TetrisBoard thisBoard = value.getSenderBoard();
                 if (isGameOver) {
+                    System.out.println(socket.getPort() + " has lost.");
                     numGameOvers += 1; // numGameOvers is only accessed here and this method is called once in only one thread so synchronization is not needed
+                    clientSockets.put(socket, false);
+                }
+                if (sendGarbageLines > 0) {
+                    sendPacketToRandomClient(socket, numConnections, isGameStarted, false, sendGarbageLines);
+                }
+                if (thisBoard != null) {
+                    sendPacket(value.getSender(), numConnections, isGameStarted, false, 0, thisBoard);
                 }
             }catch (SocketTimeoutException e) {
                 // Nothing to read in current socket
             }catch (IOException e) {
+                System.out.println("Disconnection: " + e.getMessage());
                 sendDisconnect(socket);
             }catch (ClassNotFoundException e) {
                 System.out.println("Class not found failure in receivePacket(): " + e.getMessage());
@@ -170,7 +217,7 @@ public class Server extends Thread{
      * @param socket the client socket that will be removed from the server
      */
     public void removeClient(Socket socket) throws IOException {
-        if (clientSockets.contains(socket)) {
+        if (clientSockets.containsKey(socket)) {
             clientSockets.remove(socket);
             serverDis.remove(socket);
             serverDos.remove(socket);
@@ -189,7 +236,7 @@ public class Server extends Thread{
             System.out.println("Disconnecting " + socket.getPort());
             removeClient(socket);
             numConnections = clientSockets.size();
-            sendPacket(numConnections, isGameStarted, false);
+            sendPacket(serverSocket.getLocalPort(), numConnections, isGameStarted, false, 0, null);
         }catch (IOException e) {
             System.out.println("Send Disconnect Update did not go through: " + e.getMessage());
         }
@@ -201,13 +248,13 @@ public class Server extends Thread{
     public void removeAllClients() {
         List<Socket> clientsCopy;
         synchronized (lock) {
-            clientsCopy = new ArrayList<>(clientSockets);
+            clientsCopy = new ArrayList<>(clientSockets.keySet());
         }
         for (Socket socket : clientsCopy) {
             try {
                 removeClient(socket);
             }catch (Exception e) {
-                System.out.println(e.getMessage());
+                System.out.println("Error in removeAllClients(): " + e.getMessage());
             }
         }
     }
@@ -218,7 +265,7 @@ public class Server extends Thread{
     public void clearAllSentPackets() {
         List<Socket> clientsCopy;
         synchronized (lock) {
-            clientsCopy = new ArrayList<>(clientSockets);
+            clientsCopy = new ArrayList<>(clientSockets.keySet());
         }
         for (Socket socket : clientsCopy) {
             try {

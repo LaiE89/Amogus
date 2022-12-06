@@ -7,19 +7,13 @@ import javafx.animation.Timeline;
 import javafx.util.Duration;
 import multiplayer.Client;
 import views.ConnectView;
-import views.GameView;
-import views.MultiplayerView;
-import views.TetrisView;
-
-import java.io.*;
-import java.net.ServerSocket;
-import java.net.Socket;
 import java.util.*;
+import java.util.Random;
 
 /** Represents a Tetris Model for Tetris.  
  * Based on the Tetris assignment in the Nifty Assignments Database, authored by Nick Parlante
  */
-public class TetrisModel implements Serializable {
+public class TetrisModel {
 
     public static final int WIDTH = 10; //size of the board in blocks
     public static final int HEIGHT = 20; //height of the board in blocks
@@ -45,7 +39,7 @@ public class TetrisModel implements Serializable {
 
     // Multiplayer variables
     boolean isMultiplayer = false;
-    Client client;
+    public Client client;
 
     // Controls
     public AnimationTimer controlsTimer;
@@ -61,7 +55,8 @@ public class TetrisModel implements Serializable {
         RIGHT,
         DROP,
         DOWN,
-        HOLD
+        HOLD,
+        GARBAGE
     }
 
     /**
@@ -76,29 +71,29 @@ public class TetrisModel implements Serializable {
         controlsTimer = new AnimationTimer() {
             @Override
             public void handle(long now) {
-            if (now - lastUpdate >= 80_000_000) { // Prevent this loop from occurring more than once every 80 milliseconds
-                if (isDownPressed) {
-                    if (downTimeline.getStatus() != Animation.Status.RUNNING) {
-                        downTimeline = new Timeline(new KeyFrame(Duration.seconds(0.5), e -> {
-                            modelTick(TetrisModel.MoveType.DOWN);
-                            TetrisApp.view.paintBoard();
-                        }));
-                        downTimeline.setCycleCount(Timeline.INDEFINITE);
-                        downTimeline.play();
-                    }else {
-                        downTimeline.setRate(10);
+                if (now - lastUpdate >= 80_000_000) { // Prevent this loop from occurring more than once every 80 milliseconds
+                    if (isDownPressed) {
+                        if (downTimeline.getStatus() != Animation.Status.RUNNING) {
+                            downTimeline = new Timeline(new KeyFrame(Duration.seconds(0.5), e -> {
+                                modelTick(TetrisModel.MoveType.DOWN);
+                                TetrisApp.view.paintBoard();
+                            }));
+                            downTimeline.setCycleCount(Timeline.INDEFINITE);
+                            downTimeline.play();
+                        }else {
+                            downTimeline.setRate(10);
+                        }
                     }
+                    if (isRightPressed) {
+                        modelTick(TetrisModel.MoveType.RIGHT);
+                        TetrisApp.view.paintBoard();
+                    }
+                    if (isLeftPressed) {
+                        modelTick(TetrisModel.MoveType.LEFT);
+                        TetrisApp.view.paintBoard();
+                    }
+                    lastUpdate = now;
                 }
-                if (isRightPressed) {
-                    modelTick(TetrisModel.MoveType.RIGHT);
-                    TetrisApp.view.paintBoard();
-                }
-                if (isLeftPressed) {
-                    modelTick(TetrisModel.MoveType.LEFT);
-                    TetrisApp.view.paintBoard();
-                }
-                lastUpdate = now;
-            }
             }
         };
     }
@@ -108,7 +103,6 @@ public class TetrisModel implements Serializable {
      * Start new game
      */
     public void startGame() { //start game
-        random = new Random();
         addNewPiece();
         gameOn = true;
         score = 0;
@@ -183,6 +177,8 @@ public class TetrisModel implements Serializable {
                 }
                 if (TetrisApp.view != null) TetrisApp.view.paintHoldPiece();
                 break;
+            case GARBAGE:
+                break;
             default: //doh!
                 throw new RuntimeException("Bad movement!");
         }
@@ -209,7 +205,7 @@ public class TetrisModel implements Serializable {
         if (result > TetrisBoard.ADD_ROW_FILLED) {
             stopGame(); //oops, we lost.
         }
-
+        if (this.isMultiplayer) this.client.sendPacket(this.client.numConnections, true,false, 0);
     }
 
     /**
@@ -286,6 +282,14 @@ public class TetrisModel implements Serializable {
         if (currentPiece != null) {
             board.undo();	// remove the piece from its old position
         }
+        boolean garbageOverflow = false;
+        if (verb == MoveType.GARBAGE) {
+            System.out.println("Placing garbage");
+            garbageOverflow = this.board.addGarbage(this.client.receiveGarbageLines);
+            this.client.receiveGarbageLines = 0;
+            if (this.isMultiplayer) this.client.sendPacket(this.client.numConnections, true,false, 0);
+            this.board.commit();
+        }
 
         computeNewPosition(verb);
 
@@ -300,17 +304,23 @@ public class TetrisModel implements Serializable {
         }
 
         // If move is drop, instantly place piece and add new piece
-        if ((canPlace && failed && verb==MoveType.DOWN) || verb==MoveType.DROP) {    // if it's out of bounds due to falling
+        if ((canPlace && failed && verb == MoveType.DOWN) || verb == MoveType.DROP) {    // if it's out of bounds due to falling
             this.downTimeline.stop();
             int cleared = board.clearRows();
-            if (cleared > 0) {
-                    // scores go up by 5, 10, 20, 40 as more rows are cleared
+            if (cleared > 0 && this.isMultiplayer) {
                 switch (cleared) {
+                    case 1:
                     case 2:
+                        // Send 1 line of garbage
+                        this.client.sendPacket(this.client.numConnections, this.client.isGameStarted, false, 1);
                         break;
                     case 3:
+                        // Send 2 lines of garbage
+                        this.client.sendPacket(this.client.numConnections, this.client.isGameStarted,false, 2);
                         break;
                     case 4:
+                        // Send 4 lines of garbage
+                        this.client.sendPacket(this.client.numConnections, this.client.isGameStarted,false, 4);
                         break;
                     default:
                 }
@@ -320,6 +330,9 @@ public class TetrisModel implements Serializable {
             }else {
                 addNewPiece();
             }
+        }
+        if (garbageOverflow) {
+            stopGame();
         }
     }
 
@@ -341,7 +354,7 @@ public class TetrisModel implements Serializable {
             this.controlsTimer.stop();
             this.downTimeline.stop();
         }else { // If the game is a multiplayer game, tell the server that this player lost
-            this.client.sendPacket(this.client.numConnections, true,true);
+            this.client.sendPacket(this.client.numConnections, true,true, 0);
             this.isMultiplayer = false;
         }
         gameOn = false;

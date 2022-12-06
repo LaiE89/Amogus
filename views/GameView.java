@@ -20,11 +20,10 @@ import java.util.HashMap;
 public class GameView {
 
     // Key Binds variables
-    public ArrayList<Pair<KeyCode, Moves>> movesList = new ArrayList<>(); // This will be updated by settings
     public HashMap<KeyCode, Moves> moveBindings = new HashMap<>();
 
     // Reference to TetrisView variables
-    protected BorderPane borderPane;
+    public BorderPane borderPane;
     protected Stage stage;
     protected Canvas canvas;
     protected Canvas holdPieceCanvas;
@@ -32,6 +31,12 @@ public class GameView {
     protected GraphicsContext holdgc;
     protected TetrisModel model;
 
+    //variables for controls
+    KeyCode drop = KeyCode.W;
+    KeyCode left = KeyCode.A;
+    KeyCode right = KeyCode.D;
+    KeyCode down = KeyCode.S;
+    KeyCode rotate = KeyCode.SPACE;
     public GameView () {
         borderPane = new BorderPane();
         model = TetrisApp.view.model;
@@ -52,7 +57,6 @@ public class GameView {
                 for (KeyCode i : moveBindings.keySet()) {
                     if (k.getCode() == i) {
                         moveBindings.get(i).execute();
-                        TetrisApp.view.paintBoard();
                     }
                 }
             }

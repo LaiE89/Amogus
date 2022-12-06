@@ -106,7 +106,7 @@ public class ConnectView {
             if (client != null && clientHostedServer != null && client.numConnections >= 2 && client.numConnections <= 4) {
                 clientHostedServer.isGameStarted = true;
                 clientHostedServer.clearAllSentPackets();
-                clientHostedServer.sendPacket(clientHostedServer.numConnections, true, false);
+                clientHostedServer.sendPacket(clientHostedServer.serverSocket.getLocalPort(), clientHostedServer.numConnections, true, false, 0, null);
                 System.out.println("GAME STARTED");
             }
         });
