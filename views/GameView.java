@@ -32,7 +32,7 @@ public class GameView {
     BooleanBinding anyPressed = downPressed.or(rightPressed).or(leftPressed).or(rotatePressed);
 
     // Reference to TetrisView variables
-    protected BorderPane borderPane;
+    public BorderPane borderPane;
     protected Stage stage;
     protected Canvas canvas;
     protected GraphicsContext gc;
@@ -61,6 +61,7 @@ public class GameView {
                 if (k.getCode() == TetrisApp.view.controlMap.get(4)) {
                     rotatePressed.set(true);
                     model.canPlace = false;
+                    //System.out.println("Rotated Pressed? " + rotatePressed.get() + ", Timer Started? " + timer.toString());
                 }
                 if (k.getCode() == TetrisApp.view.controlMap.get(3)) {
                     downPressed.set(true);
